@@ -4,11 +4,12 @@ FROM rocker/r-ver
 RUN R -q -e "install.packages(c('shiny', 'rmarkdown'))"
 
 # additional shiny functionality
-RUN R -q -e "install.packages(c('shinydashboard', 'shinydashboardPlus', 'shinyWidgets'))"
-RUN R -q -e "install.packages(c('fresh', 'shinycssloaders'))"
+RUN R -q -e "install.packages(c('shinydashboard', 'shinydashboardPlus'))"
+RUN R -q -e "install.packages(c('shinyWidgets,'shinycssloaders'))"
 
 # other R packages
-RUN R -q -e "install.packages(c('data.table', 'DT', 'Rnumerai'))"
+RUN R -q -e "install.packages(c('DT, 'plotly', 'scico', 'ggthemes'))"
+RUN R -q -e "install.packages(c('data.table', 'dtplyr', 'Rnumerai'))"
 
 # copy the app to the image
 WORKDIR /shinyapp

@@ -3,18 +3,25 @@ library(shinydashboard)
 library(shinydashboardPlus)
 library(shinyWidgets)
 library(shinycssloaders)
-library(data.table)
-library(Rnumerai)
 library(DT)
+library(plotly)
+library(scico)
+library(ggthemes)
+library(data.table)
+library(dtplyr)
+library(Rnumerai)
 
 
 # ==============================================================================
-# Leaderboard
+# Tournament Information
 # ==============================================================================
 
 # Download latest leaderboard from Numerai and get a list of all models
 d_lb <- get_leaderboard()
 ls_model <- sort(d_lb$username)
+
+# Round info
+d_comp <- get_competitions()
 
 
 # ==============================================================================
@@ -94,22 +101,34 @@ ui <- shinydashboardPlus::dashboardPage(
     userOutput("user")
   ),
   
+  
+  # ============================================================================
+  # Sidebar
+  # ============================================================================
+  
   sidebar = shinydashboardPlus::dashboardSidebar(
     id = "sidebar",
     sidebarMenu(
       menuItem(text = "Start Here", tabName = "start", icon = icon("play")),
-      menuItem(text = "Performance", tabName = "performance", icon = icon("line-chart")),
-      menuItem(text = "Payout", tabName = "payout", icon = icon("credit-card")),
+      menuItem(text = "Payout Summary", tabName = "payout", icon = icon("credit-card")),
+      menuItem(text = "Model Performance", tabName = "performance", icon = icon("line-chart")),
       menuItem(text = "About", tabName = "about", icon = icon("question-circle"))
     ), 
     minified = TRUE,
     collapsed = FALSE
   ),
   
+  
+  # ============================================================================
+  # Main
+  # ============================================================================
+  
   body = dashboardBody(
     
     tabItems(
       
+      # ========================================================================
+      # Start Here
       # ========================================================================
       
       tabItem(tabName = "start", 
@@ -187,6 +206,88 @@ ui <- shinydashboardPlus::dashboardPage(
       ),
       
       # ========================================================================
+      # Payout Summary
+      # ========================================================================
+      
+      tabItem(tabName = "payout", 
+              fluidPage(
+                
+                markdown("# **Payout Summary**"),
+                markdown("### Remember to refresh the charts after making changes to model selection or settings below"),
+                br(),
+                
+                fluidRow(
+                  
+                  column(6,
+                         
+                         markdown("## **Step 1 - Define the Range**"),
+                         
+                         sliderInput(inputId = "range_round", 
+                                     label = "Numerai Classic Tournament Rounds",
+                                     width = "100%",
+                                     min = min(d_comp$number),
+                                     max = max(d_comp$number),
+                                     # note: daily rounds from round 339
+                                     value = c(394, max(d_comp$number))
+                         )
+                  ),
+                  
+                  column(6, 
+                         
+                         markdown("## **Step 2 - Visualise**"),
+                         br(),
+                         actionBttn(inputId = "button_filter", 
+                                    label = "Create / Refresh Charts",
+                                    color = "primary",
+                                    icon = icon("refresh"),
+                                    style = "gradient",
+                                    block = TRUE)
+                  )
+                ),
+                
+                br(),
+                
+                tabsetPanel(type = "tabs",
+                            
+                            tabPanel("All Models",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_payout"))),
+                                     
+                                     fluidRow(
+                                       # class = "text-center",
+                                       valueBoxOutput("payout_confirmed", width = 3),
+                                       valueBoxOutput("payout_pending", width = 3),
+                                       valueBoxOutput("payout_total", width = 3),
+                                       valueBoxOutput("payout_average", width = 3)
+                                     ),
+                                     
+                                     br(),
+                                     
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_stacked"))
+                                     
+                            ),
+                            
+                            tabPanel("Individual Models",
+                                     br(),
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual"))),
+                            
+                            tabPanel("Summary Table",
+                                     br(), br(),
+                                     shinycssloaders::withSpinner(DTOutput("dt_payout_summary"))
+                            )
+                            
+                )
+                
+              )
+              
+      ),
+      
+      
+      # ========================================================================
+      # Model Performance
+      # ========================================================================
       
       tabItem(tabName = "performance", 
               fluidPage(
@@ -194,12 +295,9 @@ ui <- shinydashboardPlus::dashboardPage(
               )
       ),
       
-      tabItem(tabName = "payout", 
-              fluidPage(
-                markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
-              )
-      ),
       
+      # ========================================================================
+      # About
       # ========================================================================
       
       tabItem(tabName = "about", 
@@ -207,7 +305,7 @@ ui <- shinydashboardPlus::dashboardPage(
               markdown('#### Yet another Numerai community dashboard by <b><a href="https://linktr.ee/jofaichow" target="_blank">Jo-fai Chow</a></b>.'),
               
               br(),
-              markdown("## **Acknowledgement**"),
+              markdown("## **Acknowledgements**"),
               markdown("#### This hobby project was inspired by Rajiv's <a href='https://huggingface.co/spaces/rajistics/shiny-kmeans' target='_blank'>shiny-kmeans</a> on 🤗 Spaces."),
               
               br(),
@@ -215,6 +313,7 @@ ui <- shinydashboardPlus::dashboardPage(
               markdown(
                 "
                 - #### **0.1.0** — First prototype with an interactive table output
+                - #### **0.1.1** — Added a functional `Payout Summary`
                 "),
               br(),
               markdown("## **Session Info**"),
@@ -229,10 +328,9 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.0"))
+    right = paste0("Version 0.1.1"))
   
 )
-
 
 
 # ==============================================================================
@@ -253,23 +351,23 @@ server <- function(input, output) {
   
   
   # ============================================================================
-  # Reactive --> Download Model Data
+  # Reactive: Data
   # ============================================================================
   
-  react_download <- eventReactive(input$button_download, {sort(input$model)})
+  react_ls_model <- eventReactive(input$button_download, {sort(input$model)})
   
-  output$print_download <- renderPrint({react_download()})
+  output$print_download <- renderPrint({react_ls_model()})
   
   output$text_download <- renderText({
-    if (length(react_download()) >= 1) "Your Selection:" else " "
+    if (length(react_ls_model()) >= 1) "Your Selection:" else " "
   })
   
   output$text_preview <- renderText({
-    if (length(react_download()) >= 1) "Data Preview:" else " "
+    if (length(react_ls_model()) >= 1) "Data Preview:" else " "
   })
   
   output$text_next <- renderText({
-    if (length(react_download()) >= 1) "⬅ [Coming Soon] Performance and Payout Charts 📈📊🔥" else " "
+    if (length(react_ls_model()) >= 1) "⬅ [NEW] Payout Summary 📈📊🔥" else " "
   })
   
   react_d_model <- eventReactive(
@@ -288,6 +386,10 @@ server <- function(input, output) {
       
     }
   )
+  
+  # ============================================================================
+  # Reactive: DataTable
+  # ============================================================================
   
   output$dt_model <- DT::renderDT({
     
@@ -330,10 +432,217 @@ server <- function(input, output) {
       formatStyle(columns = c("corr_pct", "tc_pct", "fncv3_pct"),
                   color = styleInterval(cuts = c(1, 5, 15, 85, 95, 99), 
                                         values = c("#692020", "#9A2F2F", "#D24141", 
-                                                            "#D1D1D1", # light grey
-                                                            "#00A800", "#007000", "#003700"))) |>
-                                                              
+                                                   "#D1D1D1", # light grey
+                                                   "#00A800", "#007000", "#003700"))) |>
+      
       formatStyle(columns = c("payout"),
+                  fontWeight = "bold",
+                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
+                                        values = c("#D24141", "#D1D1D1", "#00A800")))
+    
+  })
+  
+  
+  # ============================================================================
+  # Reactive: filtering data for all charts
+  # ============================================================================
+  
+  react_d_filter <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Model data
+      d_filter <- react_d_model()
+      
+      # Filtering
+      d_filter <- d_filter[pay_ftr > 0, ] # ignoring the new daily rounds for now
+      d_filter <- d_filter[round >= input$range_round[1], ]
+      d_filter <- d_filter[round <= input$range_round[2], ]
+      
+      # Return
+      d_filter
+      
+    })
+  
+  
+  # ============================================================================
+  # Reactive: Payout Value Boxes
+  # ============================================================================
+  
+  output$text_payout <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Payouts in NMR" else " "
+  })
+  
+  output$payout_confirmed <- renderValueBox({
+    valueBox(value = round(sum(react_d_filter()[resolved == TRUE, ]$payout, na.rm = T), 2),
+             subtitle = "Confirmed",
+             icon = icon("check"),
+             color = "green")
+  })
+  
+  output$payout_pending <- renderValueBox({
+    valueBox(value = round(sum(react_d_filter()[resolved == FALSE, ]$payout, na.rm = T), 2),
+             subtitle = "Pending",
+             icon = icon("clock"),
+             color = "yellow")
+  })
+  
+  output$payout_total <- renderValueBox({
+    valueBox(value = round(sum(react_d_filter()$payout, na.rm = T), 2),
+             subtitle = "Confirmed + Pending",
+             icon = icon("plus"),
+             color = "aqua")
+  })
+  
+  output$payout_average <- renderValueBox({
+    valueBox(value = round((sum(react_d_filter()$payout, na.rm = T) / length(unique(react_d_filter()$round))), 2),
+             subtitle = "Round Average",
+             icon = icon("credit-card"),
+             color = "light-blue")
+  })
+  
+  
+  # ============================================================================
+  # Reactive: Payout Charts
+  # ============================================================================
+  
+  # Stacked Bar Chart
+  output$plot_payout_stacked <- renderPlotly({
+    
+    p <- ggplot(react_d_filter(), aes(x = round, y = payout, fill = payout,
+                                      text = paste("Model:", model,
+                                                   "\nRound:", round,
+                                                   "\nResolved:", resolved,
+                                                   "\nPayout:", round(payout,2), "NMR"))) +
+      geom_bar(position = "stack", stat = "identity") +
+      theme(
+        panel.border = element_rect(fill = 'transparent', 
+                                    color = "grey", linewidth = 0.25),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.background = element_rect(fill = 'transparent'),
+        legend.box.background = element_rect(fill = 'transparent')
+      ) +
+      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
+      scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
+      xlab("Tournament Round") +
+      ylab("Payout (NMR)")
+
+    # Generate plotly
+    ggplotly(p, tooltip = "text")
+    
+  })
+  
+  
+  # Individual
+  output$plot_payout_individual <- renderPlotly({
+    
+    # Get the number of unique models
+    n_model <- length(unique(react_d_filter()$model))
+    
+    # Base plot
+    p <- ggplot(react_d_filter(), aes(x = round, y = payout, fill = payout, 
+                                      text = paste("Round:", round,
+                                                   "\nResolved:", resolved,
+                                                   "\nPayout:", round(payout,2), "NMR"))) +
+      geom_bar(stat = "identity") +
+      theme(
+        panel.border = element_rect(fill = 'transparent', 
+                                    color = "grey", linewidth = 0.25),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.background = element_rect(fill = 'transparent'),
+        legend.box.background = element_rect(fill = 'transparent')
+      ) +
+      geom_hline(aes(yintercept = 0), size = 0.25, color = "grey") +
+      scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
+      xlab("Tournament Round") +
+      ylab("Confirmed / Pending Payout (NMR)")
+    
+    # Facet setting
+    if (n_model %% 5 == 0) {
+      p <- p + facet_wrap(. ~ model, ncol = 5)
+    } else {
+      p <- p + facet_wrap(. ~ model)
+    }
+    
+    # Dynamic height adjustment
+    height <- 600 # default
+    if (n_model > 10) height = 800
+    if (n_model > 15) height = 1000
+    if (n_model > 20) height = 1200
+    if (n_model > 25) height = 1400
+    if (n_model > 30) height = 1600
+    if (n_model > 35) height = 1800
+    if (n_model > 40) height = 2000
+    if (n_model > 45) height = 2200
+    if (n_model > 50) height = 2400
+    
+    # Generate plotly
+    ggplotly(p, height = height, tooltip = "text")
+    
+  })
+  
+  
+  # ============================================================================
+  # Reactive: Payout Summary Table
+  # ============================================================================
+  
+  output$dt_payout_summary <- DT::renderDT({
+    
+    # Summarise payout
+    d_smry <- 
+      react_d_filter() |> lazy_dt() |> 
+      group_by(round, resolved) |>
+      summarise(stake = sum(stake, na.rm = T),
+                payout = sum(payout, na.rm = T)) |>
+      as.data.table()
+    d_smry$rate_of_return <- (d_smry$payout / d_smry$stake) * 100
+    
+    # Generate a new DT
+    DT::datatable(
+      
+      # Data
+      d_smry,
+      
+      # Other Options
+      rownames = FALSE,
+      extensions = "Buttons",
+      options =
+        list(
+          dom = 'Bflrtip', # https://datatables.net/reference/option/dom
+          buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
+          order = list(list(0, 'asc'), list(1, 'asc')),
+          pageLength = 20,
+          lengthMenu = c(5, 10, 20, 100, 500, 1000),
+          columnDefs = list(list(className = 'dt-center', targets = "_all")))
+    ) |>
+      
+      # Reformat individual columns
+      formatRound(columns = c("stake", "payout", "rate_of_return"), digits = 2) |>
+      
+      formatStyle(columns = c("round"), fontWeight = "bold") |>
+      
+      formatStyle(columns = c("stake"),
+                  fontWeight = "bold",
+                  color = styleInterval(cuts = -1e-15, values = c("#D24141", "#2196F3"))) |>
+      
+      formatStyle(columns = c("payout"),
+                  fontWeight = "bold",
+                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
+                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
+      
+      formatStyle(columns = c("rate_of_return"),
                   fontWeight = "bold",
                   color = styleInterval(cuts = c(-1e-15, 1e-15), 
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
