@@ -265,19 +265,21 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      br(),
                                      
-                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_stacked"))
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_stacked")),
+                                     
+                                     br(),
+                                     br(),
+                                     br(),
+                                     
+                                     DTOutput("dt_payout_summary")
                                      
                             ),
                             
                             tabPanel("Individual Models",
                                      br(),
-                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual"))),
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual")))
                             
-                            tabPanel("Summary Table",
-                                     br(), br(),
-                                     shinycssloaders::withSpinner(DTOutput("dt_payout_summary"))
-                            )
-                            
+
                 )
                 
               )
@@ -315,6 +317,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 "
                 - #### **0.1.0** — First prototype with an interactive table output
                 - #### **0.1.1** — Added a functional `Payout Summary`
+                - #### **0.1.2** — `Payout Summary` layout updates
                 "),
               br(),
               markdown("## **Session Info**"),
@@ -329,7 +332,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.1"))
+    right = paste0("Version 0.1.2"))
   
 )
 
@@ -466,6 +469,29 @@ server <- function(input, output) {
     })
   
   
+  react_d_payout_summary <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Summarise payout
+      d_smry <- 
+        react_d_filter() |> lazy_dt() |> 
+        group_by(round, resolved) |>
+        summarise(stake = sum(stake, na.rm = T),
+                  payout = sum(payout, na.rm = T)) |>
+        as.data.table()
+      d_smry$rate_of_return <- (d_smry$payout / d_smry$stake) * 100
+      
+      # Rename
+      colnames(d_smry) <- c("round", "resolved", "total_stake", 
+                            "total_payout", "rate_of_return")
+      
+      # Return
+      d_smry
+      
+    })
+  
+  
   # ============================================================================
   # Reactive: Payout Value Boxes
   # ============================================================================
@@ -510,11 +536,13 @@ server <- function(input, output) {
   # Stacked Bar Chart
   output$plot_payout_stacked <- renderPlotly({
     
-    p <- ggplot(react_d_filter(), aes(x = round, y = payout, fill = payout,
-                                      text = paste("Model:", model,
-                                                   "\nRound:", round,
-                                                   "\nResolved:", resolved,
-                                                   "\nPayout:", round(payout,2), "NMR"))) +
+    # ggplot
+    p <- ggplot(react_d_filter(), 
+                aes(x = round, y = payout, fill = payout, 
+                    text = paste("Model:", model, 
+                                 "\nRound:", round,
+                                 "\nResolved:", resolved, 
+                                 "\nPayout:", round(payout,2), "NMR"))) +
       geom_bar(position = "stack", stat = "identity") +
       theme(
         panel.border = element_rect(fill = 'transparent', 
@@ -533,7 +561,7 @@ server <- function(input, output) {
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
       xlab("Tournament Round") +
       ylab("Payout (NMR)")
-
+      
     # Generate plotly
     ggplotly(p, tooltip = "text")
     
@@ -565,7 +593,7 @@ server <- function(input, output) {
         legend.background = element_rect(fill = 'transparent'),
         legend.box.background = element_rect(fill = 'transparent')
       ) +
-      geom_hline(aes(yintercept = 0), size = 0.25, color = "grey") +
+      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
       xlab("Tournament Round") +
       ylab("Confirmed / Pending Payout (NMR)")
@@ -601,20 +629,11 @@ server <- function(input, output) {
   
   output$dt_payout_summary <- DT::renderDT({
     
-    # Summarise payout
-    d_smry <- 
-      react_d_filter() |> lazy_dt() |> 
-      group_by(round, resolved) |>
-      summarise(stake = sum(stake, na.rm = T),
-                payout = sum(payout, na.rm = T)) |>
-      as.data.table()
-    d_smry$rate_of_return <- (d_smry$payout / d_smry$stake) * 100
-    
     # Generate a new DT
     DT::datatable(
       
       # Data
-      d_smry,
+      react_d_payout_summary(),
       
       # Other Options
       rownames = FALSE,
@@ -624,21 +643,21 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 20,
+          pageLength = 100,
           lengthMenu = c(5, 10, 20, 100, 500, 1000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
       
       # Reformat individual columns
-      formatRound(columns = c("stake", "payout", "rate_of_return"), digits = 2) |>
+      formatRound(columns = c("total_stake", "total_payout", "rate_of_return"), digits = 2) |>
       
       formatStyle(columns = c("round"), fontWeight = "bold") |>
       
-      formatStyle(columns = c("stake"),
+      formatStyle(columns = c("total_stake"),
                   fontWeight = "bold",
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "#2196F3"))) |>
       
-      formatStyle(columns = c("payout"),
+      formatStyle(columns = c("total_payout"),
                   fontWeight = "bold",
                   color = styleInterval(cuts = c(-1e-15, 1e-15), 
                                         values = c("#D24141", "#D1D1D1", "#00A800"))) |>
