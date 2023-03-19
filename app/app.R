@@ -306,7 +306,8 @@ ui <- shinydashboardPlus::dashboardPage(
               
               br(),
               markdown("## **Acknowledgements**"),
-              markdown("#### This hobby project was inspired by Rajiv's <a href='https://huggingface.co/spaces/rajistics/shiny-kmeans' target='_blank'>shiny-kmeans</a> on 🤗 Spaces."),
+              markdown("- #### This hobby project was inspired by Rajiv's <b><a href='https://huggingface.co/spaces/rajistics/shiny-kmeans' target='_blank'>shiny-kmeans</a></b> on 🤗 Spaces."),
+              markdown('- #### The <b><a href="https://linktr.ee/jofaichow" target="_blank">Rnumerai</a></b> package from Omni Analytics Group.'),
               
               br(),
               markdown("## **Changelog**"),
