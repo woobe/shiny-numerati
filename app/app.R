@@ -14,18 +14,6 @@ library(Rnumerai)
 
 
 # ==============================================================================
-# Tournament Information
-# ==============================================================================
-
-# Download latest leaderboard from Numerai and get a list of all models
-d_lb <- get_leaderboard()
-ls_model <- sort(d_lb$username)
-
-# Round info
-d_comp <- get_competitions()
-
-
-# ==============================================================================
 # Helper Functions
 # ==============================================================================
 
@@ -137,7 +125,7 @@ ui <- shinydashboardPlus::dashboardPage(
               fluidPage(
                 
                 # ==============================================================
-                # Special script to keep session alive
+                # Special script to keep the session alive for a bit longer
                 # ==============================================================
                 
                 tags$head(
@@ -149,7 +137,7 @@ ui <- shinydashboardPlus::dashboardPage(
                     $(document).on('shiny:connected', function(event) {
                     socket_timeout_interval = setInterval(function(){
                     Shiny.onInputChange('count', n++)
-                    }, 5000)
+                    }, 10000)
                     });
                     $(document).on('shiny:disconnected', function(event) {
                     clearInterval(socket_timeout_interval)
@@ -178,7 +166,7 @@ ui <- shinydashboardPlus::dashboardPage(
                          
                          pickerInput(inputId = "model",
                                      label = " ",
-                                     choices = ls_model,
+                                     choices = sort(Rnumerai::get_leaderboard()$username),
                                      multiple = TRUE,
                                      width = "100%",
                                      options = list(
@@ -228,7 +216,8 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 br(),
                 
-                h3(strong(textOutput(outputId = "text_next")))
+                h3(strong(textOutput(outputId = "text_next"))),
+                h3(strong(textOutput(outputId = "text_soon")))
                 
               )
       ),
@@ -253,10 +242,10 @@ ui <- shinydashboardPlus::dashboardPage(
                          sliderInput(inputId = "range_round", 
                                      label = "Numerai Classic Tournament Rounds",
                                      width = "100%",
-                                     min = min(d_comp$number),
-                                     max = max(d_comp$number),
+                                     min = 168, # first tournament round
+                                     max = Rnumerai::get_current_round(),
                                      # note: daily rounds from round 339
-                                     value = c(394, max(d_comp$number))
+                                     value = c(339, max(d_comp$number))
                          )
                   ),
                   
@@ -402,7 +391,11 @@ server <- function(input, output) {
   })
   
   output$text_next <- renderText({
-    if (length(react_ls_model()) >= 1) "⬅ [NEW] Payout Summary 📈📊🔥" else " "
+    if (length(react_ls_model()) >= 1) "⬅ [NEW] Payout Summary 📊💸" else " "
+  })
+  
+  output$text_soon <- renderText({
+    if (length(react_ls_model()) >= 1) "⬅ [COMING SOON] Model Performance 📈🔥" else " "
   })
   
   react_d_model <- eventReactive(
