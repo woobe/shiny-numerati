@@ -121,7 +121,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   
   # ============================================================================
-  # Main
+  # Main Body
   # ============================================================================
   
   body = dashboardBody(
@@ -135,6 +135,33 @@ ui <- shinydashboardPlus::dashboardPage(
       tabItem(tabName = "start", 
               
               fluidPage(
+                
+                # ==============================================================
+                # Special script to keep session alive
+                # ==============================================================
+                
+                tags$head(
+                  HTML(
+                    "
+                    <script>
+                    var socket_timeout_interval
+                    var n = 0
+                    $(document).on('shiny:connected', function(event) {
+                    socket_timeout_interval = setInterval(function(){
+                    Shiny.onInputChange('count', n++)
+                    }, 5000)
+                    });
+                    $(document).on('shiny:disconnected', function(event) {
+                    clearInterval(socket_timeout_interval)
+                    });
+                    </script>
+                    "
+                  )
+                ),
+                
+                # ==============================================================
+                # First Page
+                # ==============================================================
                 
                 markdown("# **Shiny Numerati**"),
                 markdown("### Community Dashboard for the Numerai Classic Tournament"),
@@ -322,7 +349,10 @@ ui <- shinydashboardPlus::dashboardPage(
                 "),
               br(),
               markdown("## **Session Info**"),
-              verbatimTextOutput(outputId = "session_info")
+              verbatimTextOutput(outputId = "session_info"),
+              
+              br(),
+              textOutput("keepAlive") # trick to keep session alive
       )
       
       # ========================================================================
@@ -678,6 +708,18 @@ server <- function(input, output) {
   
   output$session_info <- renderPrint({
     sessionInfo()
+  })
+  
+  
+  # ============================================================================
+  # Trick to keep session alive
+  # https://tickets.dominodatalab.com/hc/en-us/articles/360015932932-Increasing-the-timeout-for-Shiny-Server
+  # ============================================================================
+  
+  output$keepAlive <- renderText({
+    req(input$count)
+    # paste("keep alive ", input$count) 
+    " "
   })
   
 }
