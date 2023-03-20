@@ -273,11 +273,13 @@ ui <- shinydashboardPlus::dashboardPage(
                                      h3(strong(textOutput(outputId = "text_payout"))),
                                      
                                      fluidRow(
-                                       # class = "text-center",
-                                       valueBoxOutput("payout_confirmed", width = 3),
-                                       valueBoxOutput("payout_pending", width = 3),
-                                       valueBoxOutput("payout_total", width = 3),
-                                       valueBoxOutput("payout_average", width = 3)
+                                       class = "text-center",
+                                       valueBoxOutput("payout_confirmed", width = 2),
+                                       valueBoxOutput("payout_pending", width = 2),
+                                       valueBoxOutput("payout_total", width = 2),
+                                       valueBoxOutput("payout_n_round", width = 2),
+                                       valueBoxOutput("payout_average", width = 2),
+                                       valueBoxOutput("payout_avg_ror", width = 2)
                                      ),
                                      
                                      br(),
@@ -527,32 +529,42 @@ server <- function(input, output) {
   
   output$payout_confirmed <- renderValueBox({
     valueBox(value = round(sum(react_d_filter()[resolved == TRUE, ]$payout, na.rm = T), 2),
-             subtitle = "Confirmed",
-             icon = icon("check"),
-             color = "green")
+             subtitle = "Realised",
+             color = "olive")
   })
   
   output$payout_pending <- renderValueBox({
     valueBox(value = round(sum(react_d_filter()[resolved == FALSE, ]$payout, na.rm = T), 2),
              subtitle = "Pending",
-             icon = icon("clock"),
              color = "yellow")
   })
   
   output$payout_total <- renderValueBox({
     valueBox(value = round(sum(react_d_filter()$payout, na.rm = T), 2),
-             subtitle = "Confirmed + Pending",
-             icon = icon("plus"),
-             color = "aqua")
-  })
-  
-  output$payout_average <- renderValueBox({
-    valueBox(value = round((sum(react_d_filter()$payout, na.rm = T) / length(unique(react_d_filter()$round))), 2),
-             subtitle = "Round Average",
-             icon = icon("credit-card"),
+             subtitle = "Realised + Pending",
              color = "light-blue")
   })
   
+  output$payout_n_round <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = nrow(react_d_payout_summary()[total_stake > 0, ]),
+             subtitle = "Staked Rounds",
+             color = "light-blue")
+  })
+  
+  output$payout_average <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = round(mean(react_d_payout_summary()[total_stake > 0, ]$total_payout, na.rm = T), 2),
+             subtitle = "Avg. Round Payout",
+             color = "light-blue")
+  })
+
+  output$payout_avg_ror <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = paste(round(mean(react_d_payout_summary()[total_stake > 0, ]$rate_of_return), 2), "%"),
+             subtitle = "Avg. Round ROR",
+             color = "light-blue")
+  })
   
   # ============================================================================
   # Reactive: Payout Charts
