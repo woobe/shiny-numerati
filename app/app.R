@@ -9,6 +9,7 @@ library(scico)
 library(ggthemes)
 library(data.table)
 library(dtplyr)
+library(parallel)
 library(Rnumerai)
 
 
@@ -53,7 +54,7 @@ reformat_data <- function(d_raw) {
                 "fncV3", "fncV3Percentile", "payout", "roundPayoutFactor",
                 "roundNumber", "roundResolved", "selectedStakeValue",
                 "tc", "tcPercentile")
-  d_munged <- as.data.table(d_raw[, col_keep])
+  d_munged <- d_raw[, col_keep, with = FALSE]
   
   # Reformat percentile
   d_munged[, corrPercentile := round(corrPercentile * 100, 6)]
@@ -316,7 +317,7 @@ ui <- shinydashboardPlus::dashboardPage(
               markdown(
                 "
                 - #### **0.1.0** — First prototype with an interactive table output
-                - #### **0.1.1** — Added a functional `Payout Summary`
+                - #### **0.1.1** — Added a functional `Payout Summary` page
                 - #### **0.1.2** — `Payout Summary` layout updates
                 "),
               br(),
@@ -378,9 +379,10 @@ server <- function(input, output) {
     input$button_download,
     {
       
-      # Download dataframes one by one (may parallelise this in the future)
-      d_raw <- c()
-      for (item in input$model) d_raw <- rbind(d_raw, download_raw_data(item))
+      # Parallelised download
+      d_raw <- rbindlist(mclapply(X = input$model, 
+                                  FUN = download_raw_data, 
+                                  mc.cores = detectCores()))
       
       # Data munging
       d_munged <- reformat_data(d_raw)
