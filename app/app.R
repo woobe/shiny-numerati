@@ -3,12 +3,16 @@ library(shinydashboard)
 library(shinydashboardPlus)
 library(shinyWidgets)
 library(shinycssloaders)
+
 library(DT)
 library(plotly)
 library(scico)
 library(ggthemes)
+library(scales)
+
 library(data.table)
 library(dtplyr)
+
 library(parallel)
 library(Rnumerai)
 
@@ -30,7 +34,7 @@ download_raw_data <- function(model_name) {
   d_raw$model <- model_name
   
   # Return
-  return(d_raw)
+  return(as.data.table(d_raw))
   
 }
 
@@ -38,34 +42,34 @@ download_raw_data <- function(model_name) {
 reformat_data <- function(d_raw) {
   
   # Keep some columns only
-  col_keep <- c("model", "corr", "corrPercentile", "corrWMetamodel", 
-                "fncV3", "fncV3Percentile", "payout", "roundPayoutFactor",
-                "roundNumber", "roundResolved", "selectedStakeValue",
-                "tc", "tcPercentile")
+  col_keep <- c("model", "roundNumber", 
+                "roundOpenTime", "roundResolveTime",
+                "roundResolved", "selectedStakeValue",
+                "corr", "corrPercentile", 
+                "fncV3", "fncV3Percentile",
+                "tc", "tcPercentile",
+                "corrWMetamodel",
+                "roundPayoutFactor", "payout")
   d_munged <- d_raw[, col_keep, with = FALSE]
+  
+  # Date
+  d_munged[, roundOpenTime := as.Date(roundOpenTime)]
+  d_munged[, roundResolveTime := as.Date(roundResolveTime)]
   
   # Reformat percentile
   d_munged[, corrPercentile := round(corrPercentile * 100, 6)]
   d_munged[, fncV3Percentile := round(fncV3Percentile * 100, 6)]
   d_munged[, tcPercentile := round(tcPercentile * 100, 6)]
   
-  # Reorder columns
-  setcolorder(d_munged, c("model", "roundNumber", "roundResolved",
-                          "selectedStakeValue",
-                          "corr", "corrPercentile", 
-                          "fncV3", "fncV3Percentile",
-                          "tc", "tcPercentile",
-                          "corrWMetamodel",
-                          "roundPayoutFactor", "payout"))
-  
   # Rename columns
-  colnames(d_munged) <- c("model", "round", "resolved", 
-                          "stake",
+  colnames(d_munged) <- c("model", "round", 
+                          "date_open", "date_resolved",
+                          "resolved", "stake",
                           "corr", "corr_pct",
                           "fncv3", "fncv3_pct",
                           "tc", "tc_pct", 
                           "corr_meta",
-                          "pay_ftr", "payout")
+                          "pay_ftr", "payout")                 
   
   # Return
   return(d_munged)
@@ -227,6 +231,7 @@ ui <- shinydashboardPlus::dashboardPage(
       # ========================================================================
       
       tabItem(tabName = "payout", 
+              
               fluidPage(
                 
                 markdown("# **Payout Summary**"),
@@ -260,7 +265,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                     style = "gradient",
                                     block = TRUE)
                   )
-                ),
+                ), # end of fluidRow
                 
                 br(),
                 
@@ -288,7 +293,6 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      br(),
                                      br(),
-                                     br(),
                                      
                                      DTOutput("dt_payout_summary")
                                      
@@ -296,12 +300,12 @@ ui <- shinydashboardPlus::dashboardPage(
                             
                             tabPanel("Individual Models",
                                      br(),
-                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual")))
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual"))
+                            )
                             
-
-                )
+                ) # end of tabsetPanel
                 
-              )
+              ) # end of fluidPage
               
       ),
       
@@ -400,7 +404,7 @@ server <- function(input, output) {
     if (length(react_ls_model()) >= 1) "⬅ [COMING SOON] Model Performance 📈🔥" else " "
   })
   
-  react_d_model <- eventReactive(
+  react_d_raw <- eventReactive(
     input$button_download,
     {
       
@@ -409,14 +413,12 @@ server <- function(input, output) {
                                   FUN = download_raw_data, 
                                   mc.cores = detectCores()))
       
-      # Data munging
-      d_munged <- reformat_data(d_raw)
-      
-      # Return final result
-      d_munged
+      # Return
+      d_raw
       
     }
   )
+  
   
   # ============================================================================
   # Reactive: DataTable
@@ -424,10 +426,17 @@ server <- function(input, output) {
   
   output$dt_model <- DT::renderDT({
     
+    # Raw Data
+    d_raw <- react_d_raw()
+    
+    # Reformat
+    d_munged <- reformat_data(d_raw)
+    
+    # Main DT
     DT::datatable(
       
       # Data
-      react_d_model(),
+      d_munged,
       
       # Other Options
       rownames = FALSE,
@@ -482,10 +491,8 @@ server <- function(input, output) {
     input$button_filter,
     {
       
-      # Model data
-      d_filter <- react_d_model()
-      
-      # Filtering
+      # Reformat and Filter
+      d_filter <- reformat_data(react_d_raw())
       d_filter <- d_filter[pay_ftr > 0, ] # ignoring the new daily rounds for now
       d_filter <- d_filter[round >= input$range_round[1], ]
       d_filter <- d_filter[round <= input$range_round[2], ]
@@ -502,16 +509,14 @@ server <- function(input, output) {
       
       # Summarise payout
       d_smry <- 
-        react_d_filter() |> lazy_dt() |> 
-        group_by(round, resolved) |>
-        summarise(stake = sum(stake, na.rm = T),
-                  payout = sum(payout, na.rm = T)) |>
+        react_d_filter() |> 
+        lazy_dt() |> 
+        group_by(round, date_open, date_resolved, resolved) |>
+        summarise(staked_models = n(),
+                  total_stake = sum(stake, na.rm = T),
+                  net_payout = sum(payout, na.rm = T)) |>
         as.data.table()
-      d_smry$rate_of_return <- (d_smry$payout / d_smry$stake) * 100
-      
-      # Rename
-      colnames(d_smry) <- c("round", "resolved", "total_stake", 
-                            "total_payout", "rate_of_return")
+      d_smry$rate_of_return <- (d_smry$net_payout / d_smry$total_stake) * 100
       
       # Return
       d_smry
@@ -554,11 +559,11 @@ server <- function(input, output) {
   
   output$payout_average <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = round(mean(react_d_payout_summary()[total_stake > 0, ]$total_payout, na.rm = T), 2),
+    valueBox(value = round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 2),
              subtitle = "Avg. Round Payout",
              color = "light-blue")
   })
-
+  
   output$payout_avg_ror <- renderValueBox({
     # Use rounds with stake > 0 only
     valueBox(value = paste(round(mean(react_d_payout_summary()[total_stake > 0, ]$rate_of_return), 2), "%"),
@@ -573,12 +578,17 @@ server <- function(input, output) {
   # Stacked Bar Chart
   output$plot_payout_stacked <- renderPlotly({
     
+    # Data
+    d_filter <- react_d_filter()
+    
     # ggplot
-    p <- ggplot(react_d_filter(), 
-                aes(x = round, y = payout, fill = payout, 
+    p <- ggplot(d_filter, 
+                aes(x = date_resolved, y = payout, fill = payout, 
                     text = paste("Model:", model, 
                                  "\nRound:", round,
-                                 "\nResolved:", resolved, 
+                                 "\nRound Open Date:", date_open,
+                                 "\nRound Resolved Date:", date_resolved,
+                                 "\nRound Status:", resolved,
                                  "\nPayout:", round(payout,2), "NMR"))) +
       geom_bar(position = "stack", stat = "identity") +
       theme(
@@ -596,9 +606,12 @@ server <- function(input, output) {
       ) +
       geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
-      xlab("Tournament Round") +
+      scale_x_date(breaks = breaks_pretty(10),
+                   labels = label_date_short(format = c("%Y", "%b", "%d"), sep = "\n")
+      ) +
+      xlab(" \nDate (Round Resolved / Resolving)") +
       ylab("Payout (NMR)")
-      
+    
     # Generate plotly
     ggplotly(p, tooltip = "text")
     
@@ -608,14 +621,21 @@ server <- function(input, output) {
   # Individual
   output$plot_payout_individual <- renderPlotly({
     
+    # Data
+    d_filter <- react_d_filter()
+    
     # Get the number of unique models
-    n_model <- length(unique(react_d_filter()$model))
+    n_model <- length(unique(d_filter$model))
     
     # Base plot
-    p <- ggplot(react_d_filter(), aes(x = round, y = payout, fill = payout, 
-                                      text = paste("Round:", round,
-                                                   "\nResolved:", resolved,
-                                                   "\nPayout:", round(payout,2), "NMR"))) +
+    p <- ggplot(d_filter, 
+                aes(x = round, y = payout, fill = payout, 
+                    text = paste("Model:", model, 
+                                 "\nRound:", round,
+                                 "\nRound Open Date:", date_open,
+                                 "\nRound Resolved Date:", date_resolved,
+                                 "\nRound Status:", resolved,
+                                 "\nPayout:", round(payout,2), "NMR"))) +
       geom_bar(stat = "identity") +
       theme(
         panel.border = element_rect(fill = 'transparent', 
@@ -628,11 +648,13 @@ server <- function(input, output) {
         strip.text = element_text(),
         strip.clip = "on",
         legend.background = element_rect(fill = 'transparent'),
-        legend.box.background = element_rect(fill = 'transparent')
+        legend.box.background = element_rect(fill = 'transparent'),
+        axis.text.x = element_text(angle = 45, hjust = 1)
       ) +
       geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
-      xlab("Tournament Round") +
+      scale_x_continuous(breaks = breaks_pretty(5)) +
+      xlab(" \nTournament Round") +
       ylab("Confirmed / Pending Payout (NMR)")
     
     # Facet setting
@@ -686,15 +708,20 @@ server <- function(input, output) {
     ) |>
       
       # Reformat individual columns
-      formatRound(columns = c("total_stake", "total_payout", "rate_of_return"), digits = 2) |>
+      formatRound(columns = c("total_stake", "net_payout", "rate_of_return"), digits = 2) |>
       
       formatStyle(columns = c("round"), fontWeight = "bold") |>
+
+      formatStyle(columns = c("resolved"),
+                  target = "row",
+                  backgroundColor = styleEqual(c(1,0), c("transparent", "#FFF8E1"))) |>
+      
       
       formatStyle(columns = c("total_stake"),
                   fontWeight = "bold",
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "#2196F3"))) |>
       
-      formatStyle(columns = c("total_payout"),
+      formatStyle(columns = c("net_payout"),
                   fontWeight = "bold",
                   color = styleInterval(cuts = c(-1e-15, 1e-15), 
                                         values = c("#D24141", "#D1D1D1", "#00A800"))) |>

@@ -8,7 +8,7 @@ RUN R -q -e "install.packages(c('shinydashboard', 'shinydashboardPlus'))"
 RUN R -q -e "install.packages(c('shinyWidgets', 'shinycssloaders'))"
 
 # other R packages
-RUN R -q -e "install.packages(c('DT', 'plotly', 'scico', 'ggthemes'))"
+RUN R -q -e "install.packages(c('DT', 'plotly', 'scico', 'ggthemes', 'scales'))"
 RUN R -q -e "install.packages(c('data.table', 'dtplyr', 'parallel', 'Rnumerai'))"
 
 # copy the app to the image
