@@ -105,6 +105,7 @@ ui <- shinydashboardPlus::dashboardPage(
       menuItem(text = "Start Here", tabName = "start", icon = icon("play")),
       menuItem(text = "Payout Summary", tabName = "payout", icon = icon("credit-card")),
       menuItem(text = "Model Performance", tabName = "performance", icon = icon("line-chart")),
+      menuItem(text = "Raw Data", tabName = "raw_data", icon = icon("download")),
       menuItem(text = "About", tabName = "about", icon = icon("question-circle"))
     ), 
     minified = TRUE,
@@ -235,7 +236,7 @@ ui <- shinydashboardPlus::dashboardPage(
               fluidPage(
                 
                 markdown("# **Payout Summary**"),
-                markdown("### Remember to refresh the charts after making changes to model selection or settings below"),
+                markdown("### Remember to refresh the charts after making changes to model selection or settings below."),
                 br(),
                 
                 fluidRow(
@@ -322,12 +323,34 @@ ui <- shinydashboardPlus::dashboardPage(
       
       
       # ========================================================================
+      # Raw Data
+      # ========================================================================
+      
+      tabItem(tabName = "raw_data", 
+              
+              markdown("# **Download Raw Data**"),
+              markdown("### Wanna run your own analysis? No problem."),
+              markdown("### Remember to select your model(s) first."),
+              br(),
+              fluidRow(
+                column(6,
+                       downloadBttn(outputId = "download_raw", 
+                                    label = "Download Raw Data CSV", 
+                                    icon = icon("cloud-download"),
+                                    style = "gradient",
+                                    block = T)
+                       )
+              )
+      ),
+      
+      
+      # ========================================================================
       # About
       # ========================================================================
       
       tabItem(tabName = "about", 
-              markdown("## **About this App**"),
-              markdown('#### Yet another Numerai community dashboard by <b><a href="https://linktr.ee/jofaichow" target="_blank">Jo-fai Chow</a></b>.'),
+              markdown("# **About this App**"),
+              markdown('### Yet another Numerai community dashboard by <b><a href="https://linktr.ee/jofaichow" target="_blank">Jo-fai Chow</a></b>.'),
               
               br(),
               markdown("## **Acknowledgements**"),
@@ -341,7 +364,9 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.0** — First prototype with an interactive table output
                 - #### **0.1.1** — Added a functional `Payout Summary` page
                 - #### **0.1.2** — `Payout Summary` layout updates
+                - #### **0.1.3** — Added `Raw Data`
                 "),
+              
               br(),
               markdown("## **Session Info**"),
               verbatimTextOutput(outputId = "session_info"),
@@ -358,7 +383,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.2"))
+    right = paste0("Version 0.1.3"))
   
 )
 
@@ -397,7 +422,7 @@ server <- function(input, output) {
   })
   
   output$text_next <- renderText({
-    if (length(react_ls_model()) >= 1) "⬅ [NEW] Payout Summary 📊💸" else " "
+    if (length(react_ls_model()) >= 1) "⬅ [NEW] Payout Summary and Raw Data 📊💸" else " "
   })
   
   output$text_soon <- renderText({
@@ -732,6 +757,16 @@ server <- function(input, output) {
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
     
   })
+  
+  
+  # ============================================================================
+  # Reactive: Downloads
+  # ============================================================================
+  
+  output$download_raw <- downloadHandler(
+    filename = "raw_data.csv",
+    content = function(file) {fwrite(react_d_raw(), file, row.names = FALSE)}
+  )
   
   
   # ============================================================================
