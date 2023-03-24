@@ -9,6 +9,8 @@ library(plotly)
 library(scico)
 library(ggthemes)
 library(scales)
+library(stringr)
+library(wesanderson)
 
 library(data.table)
 library(dtplyr)
@@ -73,6 +75,28 @@ reformat_data <- function(d_raw) {
   
   # Return
   return(d_munged)
+  
+}
+
+# Generate Colour Palette
+gen_custom_palette <- function(ls_model) {
+  
+  # Extract info
+  n_limit <- 5
+  n_coluor <- length(unique(ls_model))
+  n_pal_rep <- ceiling(n_coluor / n_limit)
+  wes_pal_themes <- rep(c("Cavalcanti1", "Darjeeling1"), n_pal_rep)
+  
+  # Generate
+  custom_palette <- c()
+  for (n_pal in 1:n_pal_rep) {
+    tmp_pal_name <- wes_pal_themes[n_pal]
+    tmp_pal <- wesanderson::wes_palette(name = tmp_pal_name, n = n_limit, type = "continuous")
+    custom_palette <- c(custom_palette, tmp_pal)
+  }
+  
+  # Trim and return
+  return(custom_palette[1:n_coluor])
   
 }
 
@@ -317,8 +341,23 @@ ui <- shinydashboardPlus::dashboardPage(
       
       tabItem(tabName = "performance", 
               fluidPage(
-                markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
-              )
+                
+                markdown("# **Model Performance**"),
+                markdown("### **Note 1**: Experimental features. Changes to be expected in the coming days."),
+                markdown("### **Note 2**: Define the range in `Payout Summary` first."),
+                br(),
+                
+                tabsetPanel(type = "tabs",
+                            tabPanel("Boxplot - TCP",
+                                     br(),
+                                     markdown("### **TC Percentile by Model**"),
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_boxplot_tcp"))
+                            )
+                            
+                ) # End of tabsetPanel
+                
+              ) # End of fluidPage
+              
       ),
       
       
@@ -339,7 +378,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                     icon = icon("cloud-download"),
                                     style = "gradient",
                                     block = T)
-                       )
+                )
               )
       ),
       
@@ -349,6 +388,9 @@ ui <- shinydashboardPlus::dashboardPage(
       # ========================================================================
       
       tabItem(tabName = "about", 
+              
+              # markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
+              
               markdown("# **About this App**"),
               markdown('### Yet another Numerai community dashboard by <b><a href="https://linktr.ee/jofaichow" target="_blank">Jo-fai Chow</a></b>.'),
               
@@ -365,6 +407,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.1** — Added a functional `Payout Summary` page
                 - #### **0.1.2** — `Payout Summary` layout updates
                 - #### **0.1.3** — Added `Raw Data`
+                - #### **0.1.4** — Added experimental features in `Model Performance`
                 "),
               
               br(),
@@ -383,7 +426,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.3"))
+    right = paste0("Version 0.1.4"))
   
 )
 
@@ -664,8 +707,7 @@ server <- function(input, output) {
                                  "\nPayout:", round(payout,2), "NMR"))) +
       geom_bar(stat = "identity") +
       theme(
-        panel.border = element_rect(fill = 'transparent', 
-                                    color = "grey", linewidth = 0.25),
+        panel.border = element_rect(fill = 'transparent', color = "grey", linewidth = 0.25),
         panel.background = element_rect(fill = 'transparent'),
         plot.background = element_rect(fill = 'transparent', color = NA),
         panel.grid.major = element_blank(),
@@ -737,7 +779,7 @@ server <- function(input, output) {
       formatRound(columns = c("total_stake", "net_payout", "rate_of_return"), digits = 2) |>
       
       formatStyle(columns = c("round"), fontWeight = "bold") |>
-
+      
       formatStyle(columns = c("resolved"),
                   target = "row",
                   backgroundColor = styleEqual(c(1,0), c("transparent", "#FFF8E1"))) |>
@@ -757,6 +799,61 @@ server <- function(input, output) {
                   color = styleInterval(cuts = c(-1e-15, 1e-15), 
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
     
+  })
+  
+  
+  # ============================================================================
+  # Reactive: Model Performance Charts
+  # ============================================================================
+  
+  # Boxplot - TC Percentile
+  output$plot_boxplot_tcp <- renderPlotly({
+    
+    # Data
+    d_filter <- react_d_filter()
+    
+    # Order by TC_PCT
+    d_ordered <- with(d_filter, reorder(model, tc_pct, median))
+    d_filter$group <- factor(d_filter$model, levels = levels(d_ordered))
+    
+    # ggplot2
+    p <- ggplot(d_filter, aes(x = group, y = tc_pct, group = group, color = group)) +
+      geom_boxplot(fill = NA) +
+      theme(
+        panel.border = element_blank(),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_line(color = "grey", linewidth = 0.25),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.position = "none"
+      ) +
+      scale_color_manual(values = gen_custom_palette(d_filter$model)) +
+      xlab("Model") +
+      ylab("TC Percentile") +
+      scale_y_continuous(limits = c(0,100), breaks = breaks_pretty(4)) +
+      coord_flip()
+    
+    
+    # Dynamic height adjustment
+    n_model <- length(unique(d_filter$model))
+    height <- 600 # default
+    if (n_model > 10) height = 800
+    if (n_model > 15) height = 1000
+    if (n_model > 20) height = 1200
+    if (n_model > 25) height = 1400
+    if (n_model > 30) height = 1600
+    if (n_model > 35) height = 1800
+    if (n_model > 40) height = 2000
+    if (n_model > 45) height = 2200
+    if (n_model > 50) height = 2400
+    
+    # Generate plotly
+    ggplotly(p, height = height)
+
   })
   
   
