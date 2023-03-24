@@ -536,6 +536,7 @@ server <- function(input, output) {
       d_smry <- 
         react_d_filter() |> 
         lazy_dt() |> 
+        filter(stake > 0) |>
         group_by(round, date_open, date_resolved, resolved) |>
         summarise(staked_models = n(),
                   total_stake = sum(stake, na.rm = T),
