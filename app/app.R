@@ -813,12 +813,12 @@ server <- function(input, output) {
     d_filter <- react_d_filter()
     
     # Order by TC_PCT
-    d_ordered <- with(d_filter, reorder(model, tc_pct, median))
-    d_filter$group <- factor(d_filter$model, levels = levels(d_ordered))
+    d_model_order <- with(d_filter, reorder(model, tc_pct, median))
+    d_filter$model_order <- factor(d_filter$model, levels = levels(d_model_order))
     
     # ggplot2
-    p <- ggplot(d_filter, aes(x = group, y = tc_pct, group = group, color = group)) +
-      geom_boxplot(fill = NA) +
+    p <- ggplot(d_filter, aes(x = model_order, y = tc_pct, group = model_order, color = model_order)) +
+      geom_boxplot() +
       theme(
         panel.border = element_blank(),
         panel.background = element_rect(fill = 'transparent'),
