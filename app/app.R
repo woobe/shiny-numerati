@@ -130,6 +130,7 @@ ui <- shinydashboardPlus::dashboardPage(
       menuItem(text = "Payout Summary", tabName = "payout", icon = icon("credit-card")),
       menuItem(text = "Model Performance", tabName = "performance", icon = icon("line-chart")),
       menuItem(text = "Raw Data", tabName = "raw_data", icon = icon("download")),
+      menuItem(text = "Community", tabName = "community", icon = icon("users")),
       menuItem(text = "About", tabName = "about", icon = icon("question-circle"))
     ), 
     minified = TRUE,
@@ -384,12 +385,19 @@ ui <- shinydashboardPlus::dashboardPage(
       
       
       # ========================================================================
+      # Community
+      # ========================================================================
+      
+      tabItem(tabName = "community",
+              markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
+      ),
+      
+      
+      # ========================================================================
       # About
       # ========================================================================
       
       tabItem(tabName = "about", 
-              
-              # markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
               
               markdown("# **About this App**"),
               markdown('### Yet another Numerai community dashboard by <b><a href="https://linktr.ee/jofaichow" target="_blank">Jo-fai Chow</a></b>.'),
