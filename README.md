@@ -4,6 +4,7 @@ emoji: ✨
 colorFrom: yellow
 colorTo: purple
 sdk: docker
+app_port: 7860
 pinned: true
 license: apache-2.0
 ---
