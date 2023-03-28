@@ -344,18 +344,19 @@ ui <- shinydashboardPlus::dashboardPage(
               fluidPage(
                 
                 markdown("# **Model Performance**"),
-                markdown("### **Note 1**: Experimental features. Changes to be expected in the coming days."),
-                markdown("### **Note 2**: Define the range in `Payout Summary` first."),
-                br(),
                 
-                tabsetPanel(type = "tabs",
-                            tabPanel("Boxplot - TCP",
-                                     br(),
-                                     markdown("### **TC Percentile by Model**"),
-                                     shinycssloaders::withSpinner(plotlyOutput("plot_boxplot_tcp"))
-                            )
-                            
-                ) # End of tabsetPanel
+                markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
+                
+                # markdown("### **Note 1**: Experimental features. Changes to be expected in the coming days."),
+                # markdown("### **Note 2**: Define the range in `Payout Summary` first."),
+                # br(),
+                # tabsetPanel(type = "tabs",
+                #             tabPanel("Boxplot - TCP",
+                #                      br(),
+                #                      markdown("### **TC Percentile by Model**"),
+                #                      shinycssloaders::withSpinner(plotlyOutput("plot_boxplot_tcp"))
+                #             )
+                # ) # End of tabsetPanel
                 
               ) # End of fluidPage
               
@@ -415,7 +416,6 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.1** — Added a functional `Payout Summary` page
                 - #### **0.1.2** — `Payout Summary` layout updates
                 - #### **0.1.3** — Added `Raw Data`
-                - #### **0.1.4** — Added experimental features in `Model Performance`
                 "),
               
               br(),
@@ -434,7 +434,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.4"))
+    right = paste0("Version 0.1.3"))
   
 )
 
