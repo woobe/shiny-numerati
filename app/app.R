@@ -716,9 +716,6 @@ server <- function(input, output) {
     # Get the number of unique models
     n_model <- length(unique(d_filter$model))
     
-    # Switch for facet_wrap
-    if (input$switch_scale_payout) facet_scale <- "fixed" else facet_scale <- "free_y"
-    
     # Base plot
     p <- ggplot(d_filter, 
                 aes(x = round, y = payout, fill = payout, 
@@ -750,9 +747,21 @@ server <- function(input, output) {
     
     # Facet setting
     if (n_model %% 5 == 0) {
-      p <- p + facet_wrap(. ~ model, ncol = 5, scales = facet_scale)
+      
+      if (input$switch_scale_payout) {
+        p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
+      } else {
+        p <- p + facet_wrap(. ~ model, ncol = 5, scales = "free_y")
+      }
+
     } else {
-      p <- p + facet_wrap(. ~ model, scales = facet_scale)
+      
+      if (input$switch_scale_payout) {
+        p <- p + facet_wrap(. ~ model, scales = "fixed")
+      } else {
+        p <- p + facet_wrap(. ~ model, scales = "free_y")
+      }
+      
     }
     
     # Dynamic height adjustment
