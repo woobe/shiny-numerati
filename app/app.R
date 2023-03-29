@@ -325,12 +325,12 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             tabPanel("Individual Models",
-                                     br(),
-                                     materialSwitch(inputId = "switch_scale_payout", 
-                                                    label = "Fixed Y-axis Scale",
-                                                    value = TRUE,
-                                                    status = "primary",
-                                                    ),
+                                     # br(),
+                                     # materialSwitch(inputId = "switch_scale_payout", 
+                                     #                label = "Fixed Scale?",
+                                     #                value = TRUE,
+                                     #                status = "primary",
+                                     #                ),
                                      br(),
                                      h3(strong(textOutput(outputId = "text_payout_ind_models"))),
                                      br(),
@@ -670,6 +670,9 @@ server <- function(input, output) {
     # Data
     d_filter <- react_d_filter()
     
+    # Filter
+    d_filter <- d_filter[stake > 0]
+    
     # ggplot
     p <- ggplot(d_filter, 
                 aes(x = date_resolved, y = payout, fill = payout, 
@@ -713,6 +716,9 @@ server <- function(input, output) {
     # Data
     d_filter <- react_d_filter()
     
+    # Filter
+    d_filter <- d_filter[stake > 0]
+    
     # Get the number of unique models
     n_model <- length(unique(d_filter$model))
     
@@ -746,12 +752,12 @@ server <- function(input, output) {
       ylab("Realised / Pending Payout (NMR)")
     
     # Facet setting
-    if (input$switch_scale_payout) {
+    if ((n_model %% 5) == 0) {
       p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
     } else {
-      p <- p + facet_wrap(. ~ model, ncol = 5, scales = "free_y")
+      p <- p + facet_wrap(. ~ model, scales = "fixed")
     }
-    
+
     # Dynamic height adjustment
     height <- 600 # default
     if (n_model > 10) height = 800
