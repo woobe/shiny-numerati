@@ -746,22 +746,10 @@ server <- function(input, output) {
       ylab("Realised / Pending Payout (NMR)")
     
     # Facet setting
-    if (n_model %% 5 == 0) {
-      
-      if (input$switch_scale_payout) {
-        p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
-      } else {
-        p <- p + facet_wrap(. ~ model, ncol = 5, scales = "free_y")
-      }
-
+    if (input$switch_scale_payout) {
+      p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
     } else {
-      
-      if (input$switch_scale_payout) {
-        p <- p + facet_wrap(. ~ model, scales = "fixed")
-      } else {
-        p <- p + facet_wrap(. ~ model, scales = "free_y")
-      }
-      
+      p <- p + facet_wrap(. ~ model, ncol = 5, scales = "free_y")
     }
     
     # Dynamic height adjustment
