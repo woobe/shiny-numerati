@@ -301,7 +301,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      br(),
                                      
-                                     h3(strong(textOutput(outputId = "text_payout"))),
+                                     h3(strong(textOutput(outputId = "text_payout_all_models"))),
                                      
                                      fluidRow(
                                        class = "text-center",
@@ -325,6 +325,14 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             tabPanel("Individual Models",
+                                     br(),
+                                     materialSwitch(inputId = "switch_scale_payout", 
+                                                    label = "Fixed Y-axis Scale",
+                                                    value = TRUE,
+                                                    status = "primary",
+                                                    ),
+                                     br(),
+                                     h3(strong(textOutput(outputId = "text_payout_ind_models"))),
                                      br(),
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual"))
                             )
@@ -605,8 +613,12 @@ server <- function(input, output) {
   # Reactive: Payout Value Boxes
   # ============================================================================
   
-  output$text_payout <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Payouts in NMR" else " "
+  output$text_payout_all_models <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Payouts in NMR (All Models)" else " "
+  })
+  
+  output$text_payout_ind_models <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Payouts in NMR (Individual Models)" else " "
   })
   
   output$payout_confirmed <- renderValueBox({
@@ -687,7 +699,7 @@ server <- function(input, output) {
                    labels = label_date_short(format = c("%Y", "%b", "%d"), sep = "\n")
       ) +
       xlab(" \nDate (Round Resolved / Resolving)") +
-      ylab("Payout (NMR)")
+      ylab("Realised / Pending Payout (NMR)")
     
     # Generate plotly
     ggplotly(p, tooltip = "text")
@@ -703,6 +715,9 @@ server <- function(input, output) {
     
     # Get the number of unique models
     n_model <- length(unique(d_filter$model))
+    
+    # Switch for facet_wrap
+    if (input$switch_scale_payout) facet_scale <- "fixed" else facet_scale <- "free_y"
     
     # Base plot
     p <- ggplot(d_filter, 
@@ -731,13 +746,13 @@ server <- function(input, output) {
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       xlab(" \nTournament Round") +
-      ylab("Confirmed / Pending Payout (NMR)")
+      ylab("Realised / Pending Payout (NMR)")
     
     # Facet setting
     if (n_model %% 5 == 0) {
-      p <- p + facet_wrap(. ~ model, ncol = 5)
+      p <- p + facet_wrap(. ~ model, ncol = 5, scales = facet_scale)
     } else {
-      p <- p + facet_wrap(. ~ model)
+      p <- p + facet_wrap(. ~ model, scales = facet_scale)
     }
     
     # Dynamic height adjustment
