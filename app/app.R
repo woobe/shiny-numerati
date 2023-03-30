@@ -266,7 +266,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 fluidRow(
                   
-                  column(8,
+                  column(6,
                          
                          markdown("## **Step 1 - Define the Range**"),
                          
@@ -277,12 +277,11 @@ ui <- shinydashboardPlus::dashboardPage(
                                      min = 168, # first tournament round
                                      max = Rnumerai::get_current_round(),
                                      # note: daily rounds from round 339
-                                     pre = "Round ",
                                      value = c(339, Rnumerai::get_current_round())
                          )
                   ),
                   
-                  column(4, 
+                  column(6, 
                          
                          markdown("## **Step 2 - Visualise**"),
                          br(),
