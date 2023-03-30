@@ -754,23 +754,28 @@ server <- function(input, output) {
       ylab("Realised / Pending Payout (NMR)")
     
     # Facet setting
-    if ((n_model %% 5) == 0) {
+    if ((n_model %% 4) == 0) {
+      p <- p + facet_wrap(. ~ model, ncol = 4, scales = "fixed")
+    } else if ((n_model %% 5) == 0) {
       p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
     } else {
-      p <- p + facet_wrap(. ~ model, scales = "fixed")
+      p <- p + facet_wrap(. ~ model, ncol = 6, scales = "fixed")
     }
-
+    
     # Dynamic height adjustment
-    height <- 600 # default
-    if (n_model > 10) height = 800
-    if (n_model > 15) height = 1000
-    if (n_model > 20) height = 1200
-    if (n_model > 25) height = 1400
-    if (n_model > 30) height = 1600
-    if (n_model > 35) height = 1800
-    if (n_model > 40) height = 2000
-    if (n_model > 45) height = 2200
-    if (n_model > 50) height = 2400
+    height <- 600 # default minimum height
+    if (n_model >= 10) height = 800
+    if (n_model >= 15) height = 1000
+    if (n_model >= 20) height = 1200
+    if (n_model >= 25) height = 1400
+    if (n_model >= 30) height = 1600
+    if (n_model >= 35) height = 1800
+    if (n_model >= 40) height = 2000
+    if (n_model >= 45) height = 2200
+    if (n_model >= 50) height = 2400
+    if (n_model >= 55) height = 2600
+    if (n_model >= 60) height = 2800
+    if (n_model >= 65) height = 3000
     
     # Generate plotly
     ggplotly(p, height = height, tooltip = "text")
