@@ -276,8 +276,8 @@ ui <- shinydashboardPlus::dashboardPage(
                                      step = 1,
                                      min = 168, # first tournament round
                                      max = Rnumerai::get_current_round(),
-                                     # note: daily rounds from round 339
-                                     value = c(339, Rnumerai::get_current_round())
+                                     # note: daily payouts from round 474
+                                     value = c(474, Rnumerai::get_current_round())
                          )
                   ),
                   
