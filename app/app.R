@@ -298,34 +298,65 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 tabsetPanel(type = "tabs",
                             
-                            tabPanel("All Models",
+                            
+                            tabPanel("Net Round Payouts",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_payout_net"))),
+                                     
+                                     br(),
+                                     
+                                     fluidRow(
+                                       class = "text-center",
+                                       
+                                       valueBoxOutput("payout_n_round_resolved", width = 3),
+                                       valueBoxOutput("payout_resolved", width = 3),
+                                       valueBoxOutput("payout_average_resolved", width = 3),
+                                       valueBoxOutput("payout_avg_ror_resolved", width = 3),
+                                       
+                                       valueBoxOutput("payout_n_round_pending", width = 3),
+                                       valueBoxOutput("payout_pending", width = 3),
+                                       valueBoxOutput("payout_average_pending", width = 3),
+                                       valueBoxOutput("payout_avg_ror_pending", width = 3),
+                                       
+                                       valueBoxOutput("payout_n_round", width = 3),
+                                       valueBoxOutput("payout_total", width = 3),
+                                       valueBoxOutput("payout_average", width = 3),
+                                       valueBoxOutput("payout_avg_ror", width = 3)
+                                     ),
+                                     
+                                     br(),
+                                     
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_net")),
+                                     
+                                     br(),
+                                     
+                                     DTOutput("dt_payout_summary"),
+                                     
+                                     br()
+
+                                     ),
+                            
+                            
+                            tabPanel("Chart (Stacked Payouts)",
                                      
                                      br(),
                                      
                                      h3(strong(textOutput(outputId = "text_payout_all_models"))),
                                      
-                                     fluidRow(
-                                       class = "text-center",
-                                       valueBoxOutput("payout_confirmed", width = 2),
-                                       valueBoxOutput("payout_pending", width = 2),
-                                       valueBoxOutput("payout_total", width = 2),
-                                       valueBoxOutput("payout_n_round", width = 2),
-                                       valueBoxOutput("payout_average", width = 2),
-                                       valueBoxOutput("payout_avg_ror", width = 2)
-                                     ),
-                                     
                                      br(),
                                      
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_stacked")),
                                      
-                                     br(),
-                                     br(),
+                                     br()
+                                     # br(),
                                      
-                                     DTOutput("dt_payout_summary")
+                                     # DTOutput("dt_payout_summary")
                                      
                             ),
                             
-                            tabPanel("Individual Models",
+                            tabPanel("Chart (Individual Models)",
                                      # br(),
                                      # materialSwitch(inputId = "switch_scale_payout", 
                                      #                label = "Fixed Scale?",
@@ -425,6 +456,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.1** — Added a functional `Payout Summary` page
                 - #### **0.1.2** — `Payout Summary` layout updates
                 - #### **0.1.3** — Added `Raw Data`
+                - #### **0.1.4** — Improved and sped up `Payout Summary`
                 "),
               
               br(),
@@ -443,7 +475,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.3"))
+    right = paste0("Version 0.1.4"))
   
 )
 
@@ -614,56 +646,180 @@ server <- function(input, output) {
   # Reactive: Payout Value Boxes
   # ============================================================================
   
+  output$text_payout_net <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Net Payouts in NMR" else " "
+  })
+  
   output$text_payout_all_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Payouts in NMR (All Models)" else " "
+    if (nrow(react_d_filter()) >= 1) "Payouts in NMR (Stacked)" else " "
   })
   
   output$text_payout_ind_models <- renderText({
     if (nrow(react_d_filter()) >= 1) "Payouts in NMR (Individual Models)" else " "
   })
   
-  output$payout_confirmed <- renderValueBox({
-    valueBox(value = round(sum(react_d_filter()[resolved == TRUE, ]$payout, na.rm = T), 2),
-             subtitle = "Realised",
+  
+  # ============================================================================
+  # Reactive valueBox outputs: Rounds 
+  # ============================================================================
+  
+  output$payout_n_round_resolved <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = nrow(react_d_payout_summary()[resolved == TRUE & total_stake > 0, ]),
+             subtitle = "Staked Rounds (Resolved)",
              color = "olive")
   })
   
-  output$payout_pending <- renderValueBox({
-    valueBox(value = round(sum(react_d_filter()[resolved == FALSE, ]$payout, na.rm = T), 2),
-             subtitle = "Pending",
+  
+  output$payout_n_round_pending <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = nrow(react_d_payout_summary()[resolved == FALSE & total_stake > 0, ]),
+             subtitle = "Staked Rounds (Pending)",
              color = "yellow")
   })
   
-  output$payout_total <- renderValueBox({
-    valueBox(value = round(sum(react_d_filter()$payout, na.rm = T), 2),
-             subtitle = "Realised + Pending",
-             color = "light-blue")
-  })
   
   output$payout_n_round <- renderValueBox({
     # Use rounds with stake > 0 only
     valueBox(value = nrow(react_d_payout_summary()[total_stake > 0, ]),
-             subtitle = "Staked Rounds",
+             subtitle = "Staked Rounds (All)",
              color = "light-blue")
+  })
+
+  
+  # ============================================================================
+  # Reactive valueBox outputs: Payouts
+  # ============================================================================
+  
+  output$payout_resolved <- renderValueBox({
+    valueBox(value = as.character(format(round(sum(react_d_filter()[resolved == T, ]$payout, na.rm = T), 2), nsmall = 2)),
+             subtitle = "Total Payout (Resolved)",
+             color = "olive")
+  })
+
+  output$payout_pending <- renderValueBox({
+    valueBox(value = as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 2), nsmall = 2)),
+             subtitle = "Total Payout (Pending)",
+             color = "yellow")
+  })
+  
+  output$payout_total <- renderValueBox({
+    valueBox(value = as.character(format(round(sum(react_d_filter()$payout, na.rm = T), 2), nsmall = 2)),
+             subtitle = "Total Payout (All)",
+             color = "light-blue")
+  })
+  
+  
+  # ============================================================================
+  # Reactive valueBox outputs: Average Round Payouts
+  # ============================================================================
+
+  output$payout_average_resolved <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
+             subtitle = "Avg. Round Payout (Resolved)",
+             color = "olive")
+  })
+  
+  output$payout_average_pending <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
+             subtitle = "Avg. Round Payout (Pending)",
+             color = "yellow")
   })
   
   output$payout_average <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 2),
-             subtitle = "Avg. Round Payout",
+    valueBox(value = as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
+             subtitle = "Avg. Round Payout (All)",
              color = "light-blue")
+  })
+  
+  # ============================================================================
+  # Reactive valueBox outputs: Average Rate of Return
+  # ============================================================================
+  
+  output$payout_avg_ror_resolved <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$rate_of_return), 2), nsmall = 2)), "%"),
+             subtitle = "Avg. Round ROR (Resolved)",
+             color = "olive")
+  })
+  
+  output$payout_avg_ror_pending <- renderValueBox({
+    # Use rounds with stake > 0 only
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$rate_of_return), 2), nsmall = 2)), "%"),
+             subtitle = "Avg. Round ROR (Pending)",
+             color = "yellow")
   })
   
   output$payout_avg_ror <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = paste(round(mean(react_d_payout_summary()[total_stake > 0, ]$rate_of_return), 2), "%"),
-             subtitle = "Avg. Round ROR",
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$rate_of_return), 2), nsmall = 2)), "%"),
+             subtitle = "Avg. Round ROR (All)",
              color = "light-blue")
   })
+
   
   # ============================================================================
   # Reactive: Payout Charts
   # ============================================================================
+  
+  
+  # Net Payouts  Bar Chart
+  output$plot_payout_net <- renderPlotly({
+    
+    # Data
+    d_filter <- react_d_payout_summary()
+    
+    # Filter
+    d_filter <- d_filter[total_stake > 0]
+    
+    # Divider (resolved vs pending)
+    x_marker <- max(d_filter[resolved == TRUE]$round) + 0.5
+    y_marker <- max(d_filter$net_payout) 
+
+    # ggplot
+    p <- ggplot(d_filter, 
+                aes(x = round, y = net_payout, fill = net_payout, 
+                    text = paste("Round:", round,
+                                 "\nRound Open Date:", date_open,
+                                 "\nRound Resolved Date:", date_resolved,
+                                 "\nRound Resolved?:", resolved,
+                                 "\nPayout:", round(net_payout,2), "NMR"))) +
+      
+      geom_bar(position = "stack", stat = "identity") +
+      theme(
+        panel.border = element_rect(fill = 'transparent', 
+                                    color = "grey", linewidth = 0.25),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.background = element_rect(fill = 'transparent'),
+        legend.box.background = element_rect(fill = 'transparent')
+      ) +
+      
+      geom_vline(aes(xintercept = x_marker), linewidth = 0.25, color = "grey", linetype = "dashed") +
+      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
+      
+      annotate("text", x = x_marker, y = y_marker*1.2, label = "← Resolved vs. Pending →") +
+
+      scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
+      # scale_x_date(breaks = breaks_pretty(10),
+      #              labels = label_date_short(format = c("%Y", "%b", "%d"), sep = "\n")
+      # ) +
+      xlab("\nTournament Round") +
+      ylab("Round Payout (NMR)")
+    
+    # Generate plotly
+    ggplotly(p, tooltip = "text")
+    
+  })
+  
   
   # Stacked Bar Chart
   output$plot_payout_stacked <- renderPlotly({
@@ -674,14 +830,17 @@ server <- function(input, output) {
     # Filter
     d_filter <- d_filter[stake > 0]
     
+    # Divider (resolved vs pending)
+    x_marker <- max(d_filter[resolved == TRUE]$round) + 0.5
+    
     # ggplot
     p <- ggplot(d_filter, 
-                aes(x = date_resolved, y = payout, fill = payout, 
+                aes(x = round, y = payout, fill = payout, 
                     text = paste("Model:", model, 
                                  "\nRound:", round,
                                  "\nRound Open Date:", date_open,
                                  "\nRound Resolved Date:", date_resolved,
-                                 "\nRound Status:", resolved,
+                                 "\nRound Resolved?:", resolved,
                                  "\nPayout:", round(payout,2), "NMR"))) +
       geom_bar(position = "stack", stat = "identity") +
       theme(
@@ -697,13 +856,14 @@ server <- function(input, output) {
         legend.background = element_rect(fill = 'transparent'),
         legend.box.background = element_rect(fill = 'transparent')
       ) +
+      geom_vline(aes(xintercept = x_marker), linewidth = 0.25, color = "grey", linetype = "dashed") +
       geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
-      scale_x_date(breaks = breaks_pretty(10),
-                   labels = label_date_short(format = c("%Y", "%b", "%d"), sep = "\n")
-      ) +
-      xlab(" \nDate (Round Resolved / Resolving)") +
-      ylab("Realised / Pending Payout (NMR)")
+      # scale_x_date(breaks = breaks_pretty(10),
+      #              labels = label_date_short(format = c("%Y", "%b", "%d"), sep = "\n")
+      # ) +
+      xlab("\nTournament Round") +
+      ylab("Round Payout (NMR)")
     
     # Generate plotly
     ggplotly(p, tooltip = "text")
@@ -730,7 +890,7 @@ server <- function(input, output) {
                                  "\nRound:", round,
                                  "\nRound Open Date:", date_open,
                                  "\nRound Resolved Date:", date_resolved,
-                                 "\nRound Status:", resolved,
+                                 "\nRound Resolved:", resolved,
                                  "\nPayout:", round(payout,2), "NMR"))) +
       geom_bar(stat = "identity") +
       theme(
@@ -749,17 +909,18 @@ server <- function(input, output) {
       geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
-      xlab(" \nTournament Round") +
-      ylab("Realised / Pending Payout (NMR)")
+      xlab("\nTournament Round") +
+      ylab("Payout (NMR)")
     
     # Facet setting
-    if ((n_model %% 4) == 0) {
-      p <- p + facet_wrap(. ~ model, ncol = 4, scales = "fixed")
-    } else if ((n_model %% 5) == 0) {
-      p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
-    } else {
-      p <- p + facet_wrap(. ~ model, ncol = 6, scales = "fixed")
-    }
+    # if ((n_model %% 4) == 0) {
+    #   p <- p + facet_wrap(. ~ model, ncol = 4, scales = "fixed")
+    # } else if ((n_model %% 5) == 0) {
+    #   p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed")
+    # } else {
+    #   p <- p + facet_wrap(. ~ model, ncol = 6, scales = "fixed")
+    # }
+    p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed") # fixed
     
     # Dynamic height adjustment
     height <- 600 # default minimum height
@@ -802,8 +963,8 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 100,
-          lengthMenu = c(5, 10, 20, 100, 500, 1000),
+          pageLength = 500,
+          lengthMenu = c(10, 50, 100, 500, 1000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
       
