@@ -30,7 +30,8 @@ download_raw_data <- function(model_name) {
   d_raw <- round_model_performances(model_name)
   
   # Remove rows without CORR
-  d_raw <- d_raw[!is.na(d_raw$corr), ]
+  d_raw <- d_raw[!is.na(d_raw$corrWMetamodel), ]
+  
   
   # Add the model name
   d_raw$model <- model_name
@@ -71,7 +72,7 @@ reformat_data <- function(d_raw) {
                           "fncv3", "fncv3_pct",
                           "tc", "tc_pct", 
                           "corr_meta",
-                          "pay_ftr", "payout")                 
+                          "pay_ftr", "payout")
   
   # Return
   return(d_munged)
@@ -275,9 +276,8 @@ ui <- shinydashboardPlus::dashboardPage(
                                      width = "100%",
                                      step = 1,
                                      min = 168, # first tournament round
-                                     max = Rnumerai::get_current_round(),
-                                     # note: daily payouts from round 474
-                                     value = c(474, Rnumerai::get_current_round())
+                                     max = Rnumerai::get_current_round(), # note: daily payouts from round 474
+                                     value = c(496, Rnumerai::get_current_round())
                          )
                   ),
                   
