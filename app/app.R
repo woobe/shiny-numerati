@@ -16,6 +16,8 @@ library(data.table)
 library(dtplyr)
 
 library(parallel)
+
+# devtools::install_github("woobe/Rnumerai")
 library(Rnumerai)
 
 
@@ -48,7 +50,8 @@ reformat_data <- function(d_raw) {
   col_keep <- c("model", "roundNumber", 
                 "roundOpenTime", "roundResolveTime",
                 "roundResolved", "selectedStakeValue",
-                "corr", "corrPercentile", 
+                # "corr", "corrPercentile", 
+                "corr20V2", "corr20V2Percentile",
                 "fncV3", "fncV3Percentile",
                 "tc", "tcPercentile",
                 "corrWMetamodel",
@@ -60,7 +63,7 @@ reformat_data <- function(d_raw) {
   d_munged[, roundResolveTime := as.Date(roundResolveTime)]
   
   # Reformat percentile
-  d_munged[, corrPercentile := round(corrPercentile * 100, 6)]
+  d_munged[, corr20V2Percentile := round(corr20V2Percentile * 100, 6)]
   d_munged[, fncV3Percentile := round(fncV3Percentile * 100, 6)]
   d_munged[, tcPercentile := round(tcPercentile * 100, 6)]
   
@@ -68,8 +71,8 @@ reformat_data <- function(d_raw) {
   colnames(d_munged) <- c("model", "round", 
                           "date_open", "date_resolved",
                           "resolved", "stake",
-                          "corr", "corr_pct",
-                          "fncv3", "fncv3_pct",
+                          "corrV2", "corrV2_pct",
+                          "fncV3", "fncV3_pct",
                           "tc", "tc_pct", 
                           "corr_meta",
                           "pay_ftr", "payout")
@@ -277,7 +280,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      step = 1,
                                      min = 168, # first tournament round
                                      max = Rnumerai::get_current_round(), # note: daily payouts from round 474
-                                     value = c(496, Rnumerai::get_current_round())
+                                     value = c(474, Rnumerai::get_current_round())
                          )
                   ),
                   
@@ -457,6 +460,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.2** — `Payout Summary` layout updates
                 - #### **0.1.3** — Added `Raw Data`
                 - #### **0.1.4** — Improved and sped up `Payout Summary`
+                - #### **0.1.5** — Replaced `corrV1` with `corrV2`
                 "),
               
               br(),
@@ -475,7 +479,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.4"))
+    right = paste0("Version 0.1.5"))
   
 )
 
@@ -569,8 +573,8 @@ server <- function(input, output) {
     ) |>
       
       # Reformat individual columns
-      formatRound(columns = c("corr", "tc", "fncv3", "corr_meta", "pay_ftr"), digits = 4) |>
-      formatRound(columns = c("corr_pct", "tc_pct", "fncv3_pct"), digits = 1) |>
+      formatRound(columns = c("corrV2", "tc", "fncV3", "corr_meta", "pay_ftr"), digits = 4) |>
+      formatRound(columns = c("corrV2_pct", "tc_pct", "fncV3_pct"), digits = 1) |>
       formatRound(columns = c("stake", "payout"), digits = 2) |>
       
       formatStyle(columns = c("model"),
@@ -580,13 +584,13 @@ server <- function(input, output) {
                   fontWeight = "bold",
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "#2196F3"))) |>
       
-      formatStyle(columns = c("corr", "fncv3"),
+      formatStyle(columns = c("corrV2", "fncV3"),
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "black"))) |>
       
       formatStyle(columns = c("tc"),
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "#A278DC"))) |>
       
-      formatStyle(columns = c("corr_pct", "tc_pct", "fncv3_pct"),
+      formatStyle(columns = c("corrV2_pct", "tc_pct", "fncV3_pct"),
                   color = styleInterval(cuts = c(1, 5, 15, 85, 95, 99), 
                                         values = c("#692020", "#9A2F2F", "#D24141", 
                                                    "#D1D1D1", # light grey
