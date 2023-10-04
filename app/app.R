@@ -50,11 +50,11 @@ reformat_data <- function(d_raw) {
   col_keep <- c("model", "roundNumber", 
                 "roundOpenTime", "roundResolveTime",
                 "roundResolved", "selectedStakeValue",
-                # "corr", "corrPercentile", 
                 "corr20V2", "corr20V2Percentile",
                 "fncV3", "fncV3Percentile",
                 "tc", "tcPercentile",
                 "corrWMetamodel",
+                "apcwnm", "mcwnm",
                 "roundPayoutFactor", "payout")
   d_munged <- d_raw[, col_keep, with = FALSE]
   
@@ -75,6 +75,7 @@ reformat_data <- function(d_raw) {
                           "fncV3", "fncV3_pct",
                           "tc", "tc_pct", 
                           "corr_meta",
+                          "apcwnm", "mcwnm",
                           "pay_ftr", "payout")
   
   # Return
@@ -302,7 +303,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("Net Round Payouts",
+                            tabPanel("Overview (All)",
                                      
                                      br(),
                                      
@@ -338,8 +339,19 @@ ui <- shinydashboardPlus::dashboardPage(
                                      DTOutput("dt_payout_summary"),
                                      
                                      br()
-
-                                     ),
+                                     
+                            ),
+                            
+                            
+                            tabPanel("Overview (Individual)",
+                                     
+                                     br(),
+                                     
+                                     DTOutput("dt_model_payout_summary"),
+                                     
+                                     br()
+                                     
+                            ),
                             
                             
                             tabPanel("Chart (Stacked Payouts)",
@@ -353,9 +365,6 @@ ui <- shinydashboardPlus::dashboardPage(
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_stacked")),
                                      
                                      br()
-                                     # br(),
-                                     
-                                     # DTOutput("dt_payout_summary")
                                      
                             ),
                             
@@ -461,6 +470,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.3** — Added `Raw Data`
                 - #### **0.1.4** — Improved and sped up `Payout Summary`
                 - #### **0.1.5** — Replaced `corrV1` with `corrV2`
+                - #### **0.1.6** — Added `apcwnm` and `mcwnm`
                 "),
               
               br(),
@@ -479,7 +489,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.5"))
+    right = paste0("Version 0.1.6"))
   
 )
 
@@ -567,13 +577,14 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 5,
-          lengthMenu = c(5, 10, 20, 100, 500, 1000, 50000),
+          pageLength = 10,
+          lengthMenu = c(10, 20, 100, 500, 1000, 50000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
       
       # Reformat individual columns
       formatRound(columns = c("corrV2", "tc", "fncV3", "corr_meta", "pay_ftr"), digits = 4) |>
+      formatRound(columns = c("apcwnm", "mcwnm"), digits = 4) |>
       formatRound(columns = c("corrV2_pct", "tc_pct", "fncV3_pct"), digits = 1) |>
       formatRound(columns = c("stake", "payout"), digits = 2) |>
       
@@ -646,6 +657,32 @@ server <- function(input, output) {
     })
   
   
+  react_d_model_payout_summary <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Summarise payout
+      d_smry <- 
+        react_d_filter() |> 
+        lazy_dt() |> 
+        filter(stake > 0) |>
+        group_by(model) |>
+        summarise(staked_rounds = n(),
+                  net_payout = sum(payout, na.rm = T),
+                  avg_payout = mean(payout, na.rm = T),
+                  sharpe = mean(payout, na.rm = T) / sd(payout, na.rm = T)
+        ) |>
+        as.data.table()
+      
+      # Return
+      d_smry
+      
+    })
+  
+  
+  
+  
+  
   # ============================================================================
   # Reactive: Payout Value Boxes
   # ============================================================================
@@ -689,7 +726,7 @@ server <- function(input, output) {
              subtitle = "Staked Rounds (All)",
              color = "light-blue")
   })
-
+  
   
   # ============================================================================
   # Reactive valueBox outputs: Payouts
@@ -700,7 +737,7 @@ server <- function(input, output) {
              subtitle = "Total Payout (Resolved)",
              color = "olive")
   })
-
+  
   output$payout_pending <- renderValueBox({
     valueBox(value = as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 2), nsmall = 2)),
              subtitle = "Total Payout (Pending)",
@@ -717,7 +754,7 @@ server <- function(input, output) {
   # ============================================================================
   # Reactive valueBox outputs: Average Round Payouts
   # ============================================================================
-
+  
   output$payout_average_resolved <- renderValueBox({
     # Use rounds with stake > 0 only
     valueBox(value = as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
@@ -763,7 +800,7 @@ server <- function(input, output) {
              subtitle = "Avg. Round ROR (All)",
              color = "light-blue")
   })
-
+  
   
   # ============================================================================
   # Reactive: Payout Charts
@@ -782,7 +819,7 @@ server <- function(input, output) {
     # Divider (resolved vs pending)
     x_marker <- max(d_filter[resolved == TRUE]$round) + 0.5
     y_marker <- max(d_filter$net_payout) 
-
+    
     # ggplot
     p <- ggplot(d_filter, 
                 aes(x = round, y = net_payout, fill = net_payout, 
@@ -811,7 +848,7 @@ server <- function(input, output) {
       geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey") +
       
       annotate("text", x = x_marker, y = y_marker*1.2, label = "← Resolved vs. Pending →") +
-
+      
       scale_fill_scico(palette = "vikO", direction = -1, midpoint = 0) +
       # scale_x_date(breaks = breaks_pretty(10),
       #              labels = label_date_short(format = c("%Y", "%b", "%d"), sep = "\n")
@@ -951,6 +988,7 @@ server <- function(input, output) {
   # Reactive: Payout Summary Table
   # ============================================================================
   
+  # Net Round Payout Summary
   output$dt_payout_summary <- DT::renderDT({
     
     # Generate a new DT
@@ -997,6 +1035,55 @@ server <- function(input, output) {
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
     
   })
+  
+  
+  # Individual Model Payout Summary
+  output$dt_model_payout_summary <- DT::renderDT({
+    
+    # Generate a new DT
+    DT::datatable(
+      
+      # Data
+      react_d_model_payout_summary(),
+      
+      # Other Options
+      rownames = FALSE,
+      extensions = "Buttons",
+      options =
+        list(
+          dom = 'Bflrtip', # https://datatables.net/reference/option/dom
+          buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
+          order = list(list(0, 'asc'), list(1, 'asc')),
+          pageLength = 500,
+          lengthMenu = c(10, 50, 100, 500, 1000),
+          columnDefs = list(list(className = 'dt-center', targets = "_all")))
+    ) |>
+      
+      # Reformat individual columns
+      formatRound(columns = c("net_payout", "avg_payout", "sharpe"), digits = 4) |>
+      
+      # formatStyle(columns = c("model"), fontWeight = "bold") |>
+      
+      formatStyle(columns = c("net_payout"),
+                  # fontWeight = "bold",
+                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
+                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
+      
+      formatStyle(columns = c("avg_payout"),
+                  # fontWeight = "bold",
+                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
+                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
+      
+      formatStyle(columns = c("sharpe"),
+                  # fontWeight = "bold",
+                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
+                                        values = c("#D24141", "#D1D1D1", "#00A800")))
+    
+    
+    
+    
+  })
+  
   
   
   # ============================================================================
@@ -1050,7 +1137,7 @@ server <- function(input, output) {
     
     # Generate plotly
     ggplotly(p, height = height)
-
+    
   })
   
   
