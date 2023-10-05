@@ -133,9 +133,9 @@ ui <- shinydashboardPlus::dashboardPage(
     sidebarMenu(
       menuItem(text = "Start Here", tabName = "start", icon = icon("play")),
       menuItem(text = "Payout Summary", tabName = "payout", icon = icon("credit-card")),
-      menuItem(text = "Model Performance", tabName = "performance", icon = icon("line-chart")),
       menuItem(text = "Raw Data", tabName = "raw_data", icon = icon("download")),
-      menuItem(text = "Community", tabName = "community", icon = icon("users")),
+      # menuItem(text = "Model Performance", tabName = "performance", icon = icon("line-chart")),
+      menuItem(text = "Community Events", tabName = "community", icon = icon("users")),
       menuItem(text = "About", tabName = "about", icon = icon("question-circle"))
     ), 
     minified = TRUE,
@@ -442,7 +442,12 @@ ui <- shinydashboardPlus::dashboardPage(
       # ========================================================================
       
       tabItem(tabName = "community",
-              markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
+              fluidRow(
+                column(10,
+                       htmltools::includeMarkdown('https://raw.githubusercontent.com/councilofelders/meetups/master/README.md')
+                       )
+              )
+              # markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
       ),
       
       
@@ -471,6 +476,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.4** — Improved and sped up `Payout Summary`
                 - #### **0.1.5** — Replaced `corrV1` with `corrV2`
                 - #### **0.1.6** — Added `apcwnm` and `mcwnm`
+                - #### **0.1.7** — Added CoE Meetup GitHub page to `Community`
                 "),
               
               br(),
@@ -489,7 +495,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.6"))
+    right = paste0("Version 0.1.7"))
   
 )
 
