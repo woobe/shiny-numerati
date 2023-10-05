@@ -1,7 +1,7 @@
 FROM rocker/r-ver:4.2.3
 
 # basic shiny functionality
-RUN R -q -e "install.packages(c('shiny', 'rmarkdown'))"
+RUN R -q -e "install.packages(c('shiny', 'rmarkdown', 'markdown'))"
 
 # additional shiny functionality
 RUN R -q -e "install.packages(c('shinydashboard', 'shinydashboardPlus'))"
