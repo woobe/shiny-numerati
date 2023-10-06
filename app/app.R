@@ -267,7 +267,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 markdown("# **Payout Summary**"),
                 markdown("### Remember to refresh the charts after making changes to model selection or settings below."),
-                markdown("### **Note**: the charts will take a while to render if you have selected many models."),
+                markdown("### **NOTE**: the charts will take a while to render if you have selected a lot of models."),
                 
                 br(),
                 
@@ -283,7 +283,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      step = 1,
                                      min = 168, # first tournament round
                                      max = Rnumerai::get_current_round(), # note: daily payouts from round 474
-                                     value = c(474, Rnumerai::get_current_round())
+                                     value = c(496, Rnumerai::get_current_round())
                          )
                   ),
                   
@@ -305,11 +305,11 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("Summary (All Models)",
+                            tabPanel("Overview",
                                      
                                      br(),
                                      
-                                     h3(strong(textOutput(outputId = "text_payout_net"))),
+                                     h3(strong(textOutput(outputId = "text_payout_overview"))),
                                      
                                      br(),
                                      
@@ -336,6 +336,17 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_net")),
                                      
+                                     br()
+                                     
+                            ),
+                            
+                            
+                            tabPanel("Payout Summary (Rounds)",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_payout_rnd"))),
+                                     
                                      br(),
                                      
                                      DTOutput("dt_payout_summary"),
@@ -343,9 +354,13 @@ ui <- shinydashboardPlus::dashboardPage(
                                      br()
                                      
                             ),
+
                             
-                            
-                            tabPanel("Summary (Individual Models)",
+                            tabPanel("Payout Summary (Individual Models)",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_payout_ind"))),
                                      
                                      br(),
                                      
@@ -701,16 +716,24 @@ server <- function(input, output) {
   # Reactive: Payout Value Boxes
   # ============================================================================
   
-  output$text_payout_net <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Net Payouts in NMR" else " "
+  output$text_payout_overview <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Payout Summary (Overview)" else " "
+  })
+  
+  output$text_payout_rnd <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Payout Summary (Tournament Rounds)" else " "
+  })
+  
+  output$text_payout_ind <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Payout Summary (Individual Models)" else " "
   })
   
   output$text_payout_all_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Payouts in NMR (Stacked)" else " "
+    if (nrow(react_d_filter()) >= 1) "Payout Summary Chart (Stacked)" else " "
   })
   
   output$text_payout_ind_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Payouts in NMR (Individual Models)" else " "
+    if (nrow(react_d_filter()) >= 1) "Payout Summary Chart (Individual Models)" else " "
   })
   
   
@@ -747,19 +770,19 @@ server <- function(input, output) {
   # ============================================================================
   
   output$payout_resolved <- renderValueBox({
-    valueBox(value = as.character(format(round(sum(react_d_filter()[resolved == T, ]$payout, na.rm = T), 2), nsmall = 2)),
+    valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == T, ]$payout, na.rm = T), 1), nsmall = 1)), "NMR"),
              subtitle = "Total Payout (Resolved)",
              color = "olive")
   })
   
   output$payout_pending <- renderValueBox({
-    valueBox(value = as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 2), nsmall = 2)),
+    valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 1), nsmall = 1)), "NMR"),
              subtitle = "Total Payout (Pending)",
              color = "yellow")
   })
   
   output$payout_total <- renderValueBox({
-    valueBox(value = as.character(format(round(sum(react_d_filter()$payout, na.rm = T), 2), nsmall = 2)),
+    valueBox(value = paste(as.character(format(round(sum(react_d_filter()$payout, na.rm = T), 1), nsmall = 1)), "NMR"),
              subtitle = "Total Payout (All)",
              color = "light-blue")
   })
@@ -771,21 +794,21 @@ server <- function(input, output) {
   
   output$payout_average_resolved <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 1), nsmall = 1)), "NMR"),
              subtitle = "Avg. Round Payout (Resolved)",
              color = "olive")
   })
   
   output$payout_average_pending <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$net_payout, na.rm = T), 1), nsmall = 1)), "NMR"),
              subtitle = "Avg. Round Payout (Pending)",
              color = "yellow")
   })
   
   output$payout_average <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)),
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 1), nsmall = 1)), "NMR"),
              subtitle = "Avg. Round Payout (All)",
              color = "light-blue")
   })
@@ -1019,7 +1042,7 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 500,
+          pageLength = 100,
           lengthMenu = c(10, 50, 100, 500, 1000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
@@ -1068,7 +1091,7 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 500,
+          pageLength = 100,
           lengthMenu = c(10, 50, 100, 500, 1000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
