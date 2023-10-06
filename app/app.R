@@ -303,7 +303,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("Overview (All)",
+                            tabPanel("Summary (All Models)",
                                      
                                      br(),
                                      
@@ -343,7 +343,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Overview (Individual)",
+                            tabPanel("Summary (Individual Models)",
                                      
                                      br(),
                                      
@@ -354,7 +354,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Chart (Stacked Payouts)",
+                            tabPanel("Histogram (All Models)",
                                      
                                      br(),
                                      
@@ -368,7 +368,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                             ),
                             
-                            tabPanel("Chart (Individual Models)",
+                            tabPanel("Histogram (Individual Models)",
                                      # br(),
                                      # materialSwitch(inputId = "switch_scale_payout", 
                                      #                label = "Fixed Scale?",
@@ -473,10 +473,11 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.1** — Added a functional `Payout Summary` page
                 - #### **0.1.2** — `Payout Summary` layout updates
                 - #### **0.1.3** — Added `Raw Data`
-                - #### **0.1.4** — Improved and sped up `Payout Summary`
+                - #### **0.1.4** — Various improvements in `Payout Summary`
                 - #### **0.1.5** — Replaced `corrV1` with `corrV2`
                 - #### **0.1.6** — Added `apcwnm` and `mcwnm`
                 - #### **0.1.7** — Added CoE Meetup GitHub page to `Community`
+                - #### **0.1.8** — Various improvements in `Payout Summary`
                 "),
               
               br(),
@@ -495,7 +496,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.7"))
+    right = paste0("Version 0.1.8"))
   
 )
 
@@ -667,19 +668,24 @@ server <- function(input, output) {
     input$button_filter,
     {
       
-      # Summarise payout
+      # Get filtered data
+      d_smry <- as.data.table(react_d_filter())
+      
+      # Calculate rate of return (%)
+      d_smry[, rate_of_return_percent := payout / stake * 100]
+      
+      # Summarise
       d_smry <- 
-        react_d_filter() |> 
+        d_smry |> 
         lazy_dt() |> 
-        filter(stake > 0) |>
         group_by(model) |>
         summarise(staked_rounds = n(),
                   net_payout = sum(payout, na.rm = T),
                   avg_payout = mean(payout, na.rm = T),
-                  sharpe = mean(payout, na.rm = T) / sd(payout, na.rm = T)
-        ) |>
-        as.data.table()
-      
+                  avg_rate_of_return_percent = mean(rate_of_return_percent, na.rm = T),
+                  sharpe_rate_of_return = mean(rate_of_return_percent, na.rm = T) / sd(rate_of_return_percent, na.rm = T)
+        ) |> as.data.table()
+
       # Return
       d_smry
       
@@ -1066,27 +1072,18 @@ server <- function(input, output) {
     ) |>
       
       # Reformat individual columns
-      formatRound(columns = c("net_payout", "avg_payout", "sharpe"), digits = 4) |>
+      formatRound(columns = c("net_payout", "avg_payout", 
+                              "avg_rate_of_return_percent",
+                              "sharpe_rate_of_return"), digits = 4) |>
       
       # formatStyle(columns = c("model"), fontWeight = "bold") |>
       
-      formatStyle(columns = c("net_payout"),
-                  # fontWeight = "bold",
-                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
-                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
-      
-      formatStyle(columns = c("avg_payout"),
-                  # fontWeight = "bold",
-                  color = styleInterval(cuts = c(-1e-15, 1e-15), 
-                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
-      
-      formatStyle(columns = c("sharpe"),
+      formatStyle(columns = c("net_payout", "avg_payout", 
+                              "avg_rate_of_return_percent",
+                              "sharpe_rate_of_return"),
                   # fontWeight = "bold",
                   color = styleInterval(cuts = c(-1e-15, 1e-15), 
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
-    
-    
-    
     
   })
   
