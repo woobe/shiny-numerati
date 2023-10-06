@@ -195,7 +195,7 @@ ui <- shinydashboardPlus::dashboardPage(
                   
                   column(6, 
                          
-                         markdown("## **Step 1 - Select Your Models**"),
+                         markdown("## **Step 1: Select Your Models**"),
                          
                          markdown("### First, click this ⬇"),
                          
@@ -223,7 +223,7 @@ ui <- shinydashboardPlus::dashboardPage(
                   
                   column(6,
                          
-                         markdown("## **Step 2 - Download Data**"),
+                         markdown("## **Step 2: Download Data**"),
                          
                          markdown("### Next, click this ⬇ (it may take a while)"),
                          
@@ -251,8 +251,10 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 br(),
                 
-                h3(strong(textOutput(outputId = "text_next"))),
-                h3(strong(textOutput(outputId = "text_soon")))
+                h2(strong(textOutput(outputId = "text_next"))),
+                h3(textOutput(outputId = "text_note")),
+                
+                br()
                 
               )
       ),
@@ -267,7 +269,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 markdown("# **Payout Summary**"),
                 markdown("### Remember to refresh the charts after making changes to model selection or settings below."),
-                markdown("### **NOTE**: the charts will take a while to render if you have selected a lot of models."),
+                markdown("### **NOTE**: the charts may take a while to render if you have selected a lot of models."),
                 
                 br(),
                 
@@ -275,7 +277,7 @@ ui <- shinydashboardPlus::dashboardPage(
                   
                   column(6,
                          
-                         markdown("## **Step 1 - Define the Range**"),
+                         markdown("## **Step 4: Define the Range**"),
                          
                          sliderInput(inputId = "range_round", 
                                      label = "Numerai Classic Tournament Rounds",
@@ -289,7 +291,7 @@ ui <- shinydashboardPlus::dashboardPage(
                   
                   column(6, 
                          
-                         markdown("## **Step 2 - Visualise**"),
+                         markdown("## **Step 5: Plot**"),
                          br(),
                          actionBttn(inputId = "button_filter", 
                                     label = "Create / Refresh Charts",
@@ -354,7 +356,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      br()
                                      
                             ),
-
+                            
                             
                             tabPanel("Payout Summary (Individual Models)",
                                      
@@ -462,7 +464,7 @@ ui <- shinydashboardPlus::dashboardPage(
               fluidRow(
                 column(10,
                        htmltools::includeMarkdown('https://raw.githubusercontent.com/councilofelders/meetups/master/README.md')
-                       )
+                )
               )
               # markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
       ),
@@ -552,11 +554,11 @@ server <- function(input, output) {
   })
   
   output$text_next <- renderText({
-    if (length(react_ls_model()) >= 1) "⬅ [NEW] Payout Summary and Raw Data 📊💸" else " "
+    if (length(react_ls_model()) >= 1) "Step 3: Payout Summary (see ←)" else " "
   })
   
-  output$text_soon <- renderText({
-    if (length(react_ls_model()) >= 1) "⬅ [COMING SOON] Model Performance 📈🔥" else " "
+  output$text_note <- renderText({
+    if (length(react_ls_model()) >= 1) "Note: you can also download [Raw Data] and check out our [Community Events] (see ←)" else " "
   })
   
   react_d_raw <- eventReactive(
@@ -702,7 +704,7 @@ server <- function(input, output) {
                   avg_rate_of_return_percent = mean(rate_of_return_percent, na.rm = T),
                   sharpe_rate_of_return = mean(rate_of_return_percent, na.rm = T) / sd(rate_of_return_percent, na.rm = T)
         ) |> as.data.table()
-
+      
       # Return
       d_smry
       
@@ -729,7 +731,7 @@ server <- function(input, output) {
   })
   
   output$text_payout_all_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Payout Summary Chart (Stacked)" else " "
+    if (nrow(react_d_filter()) >= 1) "Payout Summary Chart (All Models - Stacked)" else " "
   })
   
   output$text_payout_ind_models <- renderText({
