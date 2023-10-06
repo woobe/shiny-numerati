@@ -267,6 +267,8 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 markdown("# **Payout Summary**"),
                 markdown("### Remember to refresh the charts after making changes to model selection or settings below."),
+                markdown("### **Note**: the charts will take a while to render if you have selected many models."),
+                
                 br(),
                 
                 fluidRow(
@@ -354,7 +356,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Histogram (All Models)",
+                            tabPanel("Chart (All Models)",
                                      
                                      br(),
                                      
@@ -368,7 +370,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                             ),
                             
-                            tabPanel("Histogram (Individual Models)",
+                            tabPanel("Chart (Individual Models)",
                                      # br(),
                                      # materialSwitch(inputId = "switch_scale_payout", 
                                      #                label = "Fixed Scale?",
