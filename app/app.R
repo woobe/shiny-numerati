@@ -929,19 +929,19 @@ server <- function(input, output) {
   # ============================================================================
   
   output$payout_resolved <- renderValueBox({
-    valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == T, ]$payout, na.rm = T), 1), nsmall = 1)), "NMR"),
+    valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == T, ]$payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Total Payout (Resolved)",
              color = "olive")
   })
   
   output$payout_pending <- renderValueBox({
-    valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 1), nsmall = 1)), "NMR"),
+    valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Total Payout (Pending)",
              color = "yellow")
   })
   
   output$payout_total <- renderValueBox({
-    valueBox(value = paste(as.character(format(round(sum(react_d_filter()$payout, na.rm = T), 1), nsmall = 1)), "NMR"),
+    valueBox(value = paste(as.character(format(round(sum(react_d_filter()$payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Total Payout (All)",
              color = "light-blue")
   })
@@ -953,21 +953,21 @@ server <- function(input, output) {
   
   output$payout_average_resolved <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 1), nsmall = 1)), "NMR"),
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Avg. Round Payout (Resolved)",
              color = "olive")
   })
   
   output$payout_average_pending <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$net_payout, na.rm = T), 1), nsmall = 1)), "NMR"),
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Avg. Round Payout (Pending)",
              color = "yellow")
   })
   
   output$payout_average <- renderValueBox({
     # Use rounds with stake > 0 only
-    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 1), nsmall = 1)), "NMR"),
+    valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Avg. Round Payout (All)",
              color = "light-blue")
   })
