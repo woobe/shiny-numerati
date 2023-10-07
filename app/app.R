@@ -106,6 +106,16 @@ gen_custom_palette <- function(ls_model) {
 }
 
 
+# max drawdown
+# https://stackoverflow.com/questions/13733166/maxdrawdown-function
+drawdown <- function(pnl) {
+  cum.pnl  <- c(0, cumsum(pnl))
+  drawdown <- cum.pnl - cummax(cum.pnl)
+  return(tail(drawdown, -1))
+}
+maxdrawdown <- function(pnl)min(drawdown(pnl))
+
+
 # ==============================================================================
 # UI
 # ==============================================================================
@@ -373,6 +383,49 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
+                            tabPanel("Payout Sim (Experimental)",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_payout_sim"))),
+                                     
+                                     br(),
+                                     
+                                     
+                                     markdown("![new_tc_change](https://i.ibb.co/XjKwtzr/screenshot-2023-10-05-at-10.png)"),
+                                     
+                                     br(),
+                                     
+                                     markdown("#### **Notes**:
+                                              
+                                              - **sum_pay**: Sum of Payouts
+                                              - **shp_pay**: Sharpe Ratio of Payouts
+                                              - **1C0T**: 1xCORRv2 + 0xTC
+                                              - **2C0T**: 2xCORRv2 + 0xTC (New Payout Mode)
+                                              - **2C1T**: 2xCORRv2 + 1xTC (New Payout Mode)
+                                              - **1C3T**: 1xCORRv2 + 3xTC (Original Degen Mode)
+                                              
+                                              "),
+                                     
+                                     br(),
+                                     
+                                     markdown("### **Payout Simulation (Overall)**"),
+                                     
+                                     DTOutput("dt_payout_sim_overall"),
+                                     
+                                     br(),
+                                     br(),
+                                     
+                                     markdown("### **Payout Simulation (Individual Models)**"),
+                                     
+                                     br(),
+                                     
+                                     DTOutput("dt_payout_sim_model"),
+                                     
+                                     br()
+                                     
+                            ),
+                            
                             tabPanel("Chart (All Models)",
                                      
                                      br(),
@@ -399,7 +452,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      br(),
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual"))
                             )
-                            
+
                 ) # end of tabsetPanel
                 
               ) # end of fluidPage
@@ -497,6 +550,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.6** — Added `apcwnm` and `mcwnm`
                 - #### **0.1.7** — Added CoE Meetup GitHub page to `Community`
                 - #### **0.1.8** — Various improvements in `Payout Summary`
+                - #### **0.1.9** — Added `Payout Sim` based on new Corr and TC multipier settings
                 "),
               
               br(),
@@ -515,7 +569,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.8"))
+    right = paste0("Version 0.1.9"))
   
 )
 
@@ -712,6 +766,104 @@ server <- function(input, output) {
   
   
   
+  react_d_payout_sim_model <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Get filtered data
+      d_payout <- as.data.table(react_d_filter())
+
+      # Apply clip to corrV2
+      d_payout[, corrV2_final := corrV2]
+      d_payout[corrV2 > 0.25, corrV2_final := 0.25]
+      d_payout[corrV2 < -0.25, corrV2_final := -0.25]
+      
+      # Apply clip to tc
+      d_payout[, tc_final := tc]
+      d_payout[tc > 0.25, tc_final := 0.25]
+      d_payout[tc < -0.25, tc_final := -0.25]
+      
+      # Calculate different payout
+      d_payout[, payout_1C0T := (corrV2_final) * stake * pay_ftr]
+      d_payout[, payout_2C0T := (2*corrV2_final) * stake * pay_ftr]
+      d_payout[, payout_2C1T := (2*corrV2_final + tc_final) * stake * pay_ftr]
+      d_payout[, payout_1C3T := (corrV2_final + 3*tc_final) * stake * pay_ftr]
+      
+      # Summarise
+      d_payout_smry <-
+        d_payout |>
+        lazy_dt() |>
+        group_by(model) |>
+        summarise(
+          rounds = n(),
+          
+          sum_pay_1C0T = sum(payout_1C0T, na.rm = T),
+          sum_pay_2C0T = sum(payout_2C0T, na.rm = T),
+          sum_pay_2C1T = sum(payout_2C1T, na.rm = T),
+          sum_pay_1C3T = sum(payout_1C3T, na.rm = T),
+          
+          shp_pay_1C0T = mean(payout_1C0T, na.rm = T) / sd(payout_1C0T, na.rm = T),
+          shp_pay_2C0T = mean(payout_2C0T, na.rm = T) / sd(payout_2C0T, na.rm = T),
+          shp_pay_2C1T = mean(payout_2C1T, na.rm = T) / sd(payout_2C1T, na.rm = T),
+          shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T)
+          
+        ) |>
+        as.data.table()
+
+      # Return
+      d_payout_smry
+      
+    })
+  
+  
+  react_d_payout_sim_overall <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Get filtered data
+      d_payout <- as.data.table(react_d_filter())
+      
+      # Apply clip to corrV2
+      d_payout[, corrV2_final := corrV2]
+      d_payout[corrV2 > 0.25, corrV2_final := 0.25]
+      d_payout[corrV2 < -0.25, corrV2_final := -0.25]
+      
+      # Apply clip to tc
+      d_payout[, tc_final := tc]
+      d_payout[tc > 0.25, tc_final := 0.25]
+      d_payout[tc < -0.25, tc_final := -0.25]
+      
+      # Calculate different payout
+      d_payout[, payout_1C0T := (corrV2_final) * stake * pay_ftr]
+      d_payout[, payout_2C0T := (2*corrV2_final) * stake * pay_ftr]
+      d_payout[, payout_2C1T := (2*corrV2_final + tc_final) * stake * pay_ftr]
+      d_payout[, payout_1C3T := (corrV2_final + 3*tc_final) * stake * pay_ftr]
+      
+      # Summarise
+      d_payout_smry <-
+        d_payout |>
+        lazy_dt() |>
+        summarise(
+          
+          sum_pay_1C0T = sum(payout_1C0T, na.rm = T),
+          sum_pay_2C0T = sum(payout_2C0T, na.rm = T),
+          sum_pay_2C1T = sum(payout_2C1T, na.rm = T),
+          sum_pay_1C3T = sum(payout_1C3T, na.rm = T),
+          
+          shp_pay_1C0T = mean(payout_1C0T, na.rm = T) / sd(payout_1C0T, na.rm = T),
+          shp_pay_2C0T = mean(payout_2C0T, na.rm = T) / sd(payout_2C0T, na.rm = T),
+          shp_pay_2C1T = mean(payout_2C1T, na.rm = T) / sd(payout_2C1T, na.rm = T),
+          shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T)
+          
+        ) |>
+        as.data.table()
+      
+      # Return
+      d_payout_smry
+      
+    })
+  
+  
   
   
   # ============================================================================
@@ -737,6 +889,11 @@ server <- function(input, output) {
   output$text_payout_ind_models <- renderText({
     if (nrow(react_d_filter()) >= 1) "Payout Summary Chart (Individual Models)" else " "
   })
+  
+  output$text_payout_sim <- renderText({
+    if (nrow(react_d_filter()) >= 1) "New Payout Simulation (NOTE: Experimental!)" else " "
+  })
+  
   
   
   # ============================================================================
@@ -1022,6 +1179,7 @@ server <- function(input, output) {
     
   })
   
+
   
   # ============================================================================
   # Reactive: Payout Summary Table
@@ -1113,6 +1271,86 @@ server <- function(input, output) {
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
     
   })
+  
+  
+  # Payout Sim (Model)
+  output$dt_payout_sim_model <- DT::renderDT({
+    
+    # Generate a new DT
+    DT::datatable(
+      
+      # Data
+      react_d_payout_sim_model(),
+      
+      # Other Options
+      rownames = FALSE,
+      extensions = "Buttons",
+      options =
+        list(
+          dom = 'Bflrtip', # https://datatables.net/reference/option/dom
+          buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
+          order = list(list(0, 'asc'), list(1, 'asc')),
+          pageLength = 100,
+          lengthMenu = c(10, 50, 100, 500, 1000),
+          columnDefs = list(list(className = 'dt-center', targets = "_all")))
+    ) |>
+      
+      # Reformat individual columns
+      formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
+                  digits = 2) |>
+
+      formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
+                  color = styleInterval(cuts = c(-1e-15, 1e-15),
+                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
+      
+      formatStyle(columns = c("model", 
+                              "sum_pay_2C1T", "sum_pay_1C3T",
+                              "shp_pay_2C1T", "shp_pay_1C3T"
+      ), fontWeight = "bold")
+    
+  })
+  
+  
+  # Payout Sim (Overall)
+  output$dt_payout_sim_overall <- DT::renderDT({
+    
+    # Generate a new DT
+    DT::datatable(
+      
+      # Data
+      react_d_payout_sim_overall(),
+      
+      # Other Options
+      rownames = FALSE,
+      # extensions = "Buttons",
+      options =
+        list(
+          dom = 't', # https://datatables.net/reference/option/dom
+          # buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
+          # order = list(list(0, 'asc'), list(1, 'asc')),
+          # pageLength = 10,
+          # lengthMenu = c(10, 50, 100, 500, 1000),
+          columnDefs = list(list(className = 'dt-center', targets = "_all")))
+    ) |>
+      
+      # Reformat individual columns
+      formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
+                  digits = 2) |>
+      
+      formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
+                  color = styleInterval(cuts = c(-1e-15, 1e-15),
+                                        values = c("#D24141", "#D1D1D1", "#00A800"))) |>
+      
+      formatStyle(columns = c("sum_pay_2C1T", "sum_pay_1C3T",
+                              "shp_pay_2C1T", "shp_pay_1C3T"
+      ), fontWeight = "bold")
+    
+  })
+  
   
   
   
