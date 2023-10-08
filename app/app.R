@@ -292,7 +292,7 @@ ui <- shinydashboardPlus::dashboardPage(
                   
                   column(6,
                          
-                         markdown("## **Step 4: Define the Range**"),
+                         markdown("## **Step 4: Adjust the Filter**"),
                          
                          sliderInput(inputId = "range_round", 
                                      label = "Numerai Classic Tournament Rounds",
