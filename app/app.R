@@ -365,58 +365,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      br()
 
                             ),
-                            
-                            
-                            tabPanel("KPI Charts",
-                                     
-                                     br(),
-                                     
-                                     h3(strong(textOutput(outputId = "text_performance_chart"))),
-                                     
-                                     br(),
-                                     
-                                     fluidRow(
-                                       
-                                       column(4,
-                                              markdown("## **CORR Multiper**"),
-                                              sliderInput(inputId = "multiper_corr", 
-                                                          label = "Numerai Classic Tournament Rounds",
-                                                          width = "100%",
-                                                          step = 0.5,
-                                                          min = 0,
-                                                          max = 2,
-                                                          value = 1)
-                                       ),
-                                       
-                                       column(4,
-                                              markdown("## **TC Multiper**"),
-                                              sliderInput(inputId = "multiper_tc", 
-                                                          label = "Numerai Classic Tournament Rounds",
-                                                          width = "100%",
-                                                          step = 0.5,
-                                                          min = 0,
-                                                          max = 1,
-                                                          value = 1)
-                                       ),
-                                       
-                                       
-                                       column(4, 
-                                              
-                                              markdown("## **Refresh**"),
-                                              br(),
-                                              actionBttn(inputId = "button_kpi_chart", 
-                                                         label = "Generate / Refresh",
-                                                         color = "primary",
-                                                         icon = icon("refresh"),
-                                                         style = "gradient",
-                                                         block = TRUE)
-                                       )
-                                       
-                                       
-                                     ) # end of fluidRow
 
-                                     ),
-                            
                             
                             tabPanel("Payout (Overview)",
                                      
