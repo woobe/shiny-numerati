@@ -1351,11 +1351,13 @@ server <- function(input, output) {
       ) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       scale_y_continuous(breaks = breaks_pretty(5)) +
-      geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
-      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
       xlab("\nAverage TC") +
       ylab("\nAverage CORRv2")
     
+    # Add vline and hline if needed
+    if (min(d_pref$avg_corrV2) <0) p_avg <- p_avg + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+    if (min(d_pref$avg_tc) <0) p_avg <- p_avg + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+
     # Convert to Plotly
     ggplotly(p_avg, tooltip = "text")
     
@@ -1391,10 +1393,12 @@ server <- function(input, output) {
       ) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       scale_y_continuous(breaks = breaks_pretty(5)) +
-      geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
-      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
       xlab("\nSharpe Ratio of TC") +
       ylab("\nSharpe Ratio of CORRv2")
+    
+    # Add vline and hline if needed
+    if (min(d_pref$sharpe_corrV2) <0) p_sharpe <- p_sharpe + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+    if (min(d_pref$sharpe_tc) <0) p_sharpe <- p_sharpe + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
     
     # Convert to Plotly
     ggplotly(p_sharpe, tooltip = "text")
