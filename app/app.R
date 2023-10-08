@@ -106,15 +106,6 @@ gen_custom_palette <- function(ls_model) {
 }
 
 
-# max drawdown
-# https://stackoverflow.com/questions/13733166/maxdrawdown-function
-drawdown <- function(pnl) {
-  cum.pnl  <- c(0, cumsum(pnl))
-  drawdown <- cum.pnl - cummax(cum.pnl)
-  return(tail(drawdown, -1))
-}
-maxdrawdown <- function(pnl)min(drawdown(pnl))
-
 
 # ==============================================================================
 # UI
@@ -142,9 +133,8 @@ ui <- shinydashboardPlus::dashboardPage(
     id = "sidebar",
     sidebarMenu(
       menuItem(text = "Start Here", tabName = "start", icon = icon("play")),
-      menuItem(text = "Payout Summary", tabName = "payout", icon = icon("credit-card")),
+      menuItem(text = "Performance Summary", tabName = "performance", icon = icon("line-chart")), # icon("credit-card")
       menuItem(text = "Raw Data", tabName = "raw_data", icon = icon("download")),
-      # menuItem(text = "Model Performance", tabName = "performance", icon = icon("line-chart")),
       menuItem(text = "Community Events", tabName = "community", icon = icon("users")),
       menuItem(text = "About", tabName = "about", icon = icon("question-circle"))
     ), 
@@ -211,7 +201,22 @@ ui <- shinydashboardPlus::dashboardPage(
                          
                          pickerInput(inputId = "model",
                                      label = " ",
-                                     choices = sort(Rnumerai::get_leaderboard()$username),
+                                     # choices = sort(Rnumerai::get_leaderboard()$username),
+                                     choices = unique(c(sort(Rnumerai::get_leaderboard()$username),
+                                                        
+                                                        "joe_the_validator_01",
+                                                        "joe_the_validator_02",
+                                                        "joe_the_validator_03",
+                                                        "joe_the_validator_04",
+                                                        "joe_the_validator_05",
+                                                        
+                                                        "joe_the_hedgehog_01",
+                                                        "joe_the_hedgehog_02",
+                                                        "joe_the_hedgehog_03",
+                                                        "joe_the_hedgehog_04",
+                                                        "joe_the_hedgehog_05"
+                                                        )
+                                                      ),
                                      multiple = TRUE,
                                      width = "100%",
                                      options = list(
@@ -273,11 +278,11 @@ ui <- shinydashboardPlus::dashboardPage(
       # Payout Summary
       # ========================================================================
       
-      tabItem(tabName = "payout", 
+      tabItem(tabName = "performance", 
               
               fluidPage(
                 
-                markdown("# **Payout Summary**"),
+                markdown("# **Performance Summary**"),
                 markdown("### Remember to refresh the charts after making changes to model selection or settings below."),
                 markdown("### **NOTE**: the charts may take a while to render if you have selected a lot of models."),
                 
@@ -301,10 +306,10 @@ ui <- shinydashboardPlus::dashboardPage(
                   
                   column(6, 
                          
-                         markdown("## **Step 5: Plot**"),
+                         markdown("## **Step 5: Generate Summary**"),
                          br(),
                          actionBttn(inputId = "button_filter", 
-                                    label = "Create / Refresh Charts",
+                                    label = "Generate / Refresh",
                                     color = "primary",
                                     icon = icon("refresh"),
                                     style = "gradient",
@@ -317,7 +322,37 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("Overview",
+                            tabPanel("KPIs (Models)",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_performance_models"))),
+                                     
+                                     br(),
+                                     
+                                     DTOutput("dt_performance_summary"),
+                                     
+                                     br(),
+                                     
+                                     markdown("#### **Notes**:
+                                              
+                                              - **avg_corrV2**: Average `CORRv2`
+                                              - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
+                                              
+                                              - **avg_tc**: Average True Contribution (`TC`)
+                                              - **sharpe_tc**: Sharpe Ratio of True Contribution (`TC`)
+                                              
+                                              - **avg_2C1T**: Average `2xCORRv2 + 1xTC`
+                                              - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
+                                              
+                                              "),
+                                     
+                                     br()
+                                     
+                            ),
+                            
+                            
+                            tabPanel("Payout (Overview)",
                                      
                                      br(),
                                      
@@ -353,7 +388,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout Summary (Rounds)",
+                            tabPanel("Payout (Rounds)",
                                      
                                      br(),
                                      
@@ -368,7 +403,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout Summary (Individual Models)",
+                            tabPanel("Payout (Models)",
                                      
                                      br(),
                                      
@@ -383,14 +418,13 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout Sim (Experimental)",
+                            tabPanel("Payout (Simulation)",
                                      
                                      br(),
                                      
                                      h3(strong(textOutput(outputId = "text_payout_sim"))),
                                      
                                      br(),
-                                     
                                      
                                      markdown("![new_tc_change](https://i.ibb.co/XjKwtzr/screenshot-2023-10-05-at-10.png)"),
                                      
@@ -414,6 +448,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      DTOutput("dt_payout_sim_overall"),
                                      
                                      br(),
+                                     
                                      br(),
                                      
                                      markdown("### **Payout Simulation (Individual Models)**"),
@@ -426,7 +461,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                             ),
                             
-                            tabPanel("Chart (All Models)",
+                            tabPanel("Payout Chart (Rounds)",
                                      
                                      br(),
                                      
@@ -440,7 +475,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                             ),
                             
-                            tabPanel("Chart (Individual Models)",
+                            tabPanel("Payout Chart (Models)",
                                      # br(),
                                      # materialSwitch(inputId = "switch_scale_payout", 
                                      #                label = "Fixed Scale?",
@@ -456,33 +491,6 @@ ui <- shinydashboardPlus::dashboardPage(
                 ) # end of tabsetPanel
                 
               ) # end of fluidPage
-              
-      ),
-      
-      
-      # ========================================================================
-      # Model Performance
-      # ========================================================================
-      
-      tabItem(tabName = "performance", 
-              fluidPage(
-                
-                markdown("# **Model Performance**"),
-                
-                markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
-                
-                # markdown("### **Note 1**: Experimental features. Changes to be expected in the coming days."),
-                # markdown("### **Note 2**: Define the range in `Payout Summary` first."),
-                # br(),
-                # tabsetPanel(type = "tabs",
-                #             tabPanel("Boxplot - TCP",
-                #                      br(),
-                #                      markdown("### **TC Percentile by Model**"),
-                #                      shinycssloaders::withSpinner(plotlyOutput("plot_boxplot_tcp"))
-                #             )
-                # ) # End of tabsetPanel
-                
-              ) # End of fluidPage
               
       ),
       
@@ -551,6 +559,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.7** — Added CoE Meetup GitHub page to `Community`
                 - #### **0.1.8** — Various improvements in `Payout Summary`
                 - #### **0.1.9** — Added `Payout Sim` based on new Corr and TC multipier settings
+                - #### **0.2.0** — Replaced `Payout Summary` with `Performance Summary`. Added KPIs summary.
                 "),
               
               br(),
@@ -569,7 +578,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.1.9"))
+    right = paste0("Version 0.2.0"))
   
 )
 
@@ -630,10 +639,12 @@ server <- function(input, output) {
     }
   )
   
+
   
   # ============================================================================
   # Reactive: DataTable
   # ============================================================================
+  
   
   output$dt_model <- DT::renderDT({
     
@@ -695,6 +706,7 @@ server <- function(input, output) {
   })
   
   
+  
   # ============================================================================
   # Reactive: filtering data for all charts
   # ============================================================================
@@ -705,7 +717,6 @@ server <- function(input, output) {
       
       # Reformat and Filter
       d_filter <- reformat_data(react_d_raw())
-      d_filter <- d_filter[pay_ftr > 0, ] # ignoring the new daily rounds for now
       d_filter <- d_filter[round >= input$range_round[1], ]
       d_filter <- d_filter[round <= input$range_round[2], ]
       
@@ -722,7 +733,8 @@ server <- function(input, output) {
       # Summarise payout
       d_smry <- 
         react_d_filter() |> 
-        lazy_dt() |> 
+        lazy_dt() |>
+        filter(pay_ftr > 0) |>
         filter(stake > 0) |>
         group_by(round, date_open, date_resolved, resolved) |>
         summarise(staked_models = n(),
@@ -742,7 +754,13 @@ server <- function(input, output) {
     {
       
       # Get filtered data
-      d_smry <- as.data.table(react_d_filter())
+      # d_smry <- as.data.table(react_d_filter() |> filter(pay_ftr > 0))
+      d_smry <- 
+        react_d_filter() |> 
+        lazy_dt() |>
+        filter(pay_ftr > 0) |>
+        filter(stake > 0) |>
+        as.data.table()
       
       # Calculate rate of return (%)
       d_smry[, rate_of_return_percent := payout / stake * 100]
@@ -771,7 +789,13 @@ server <- function(input, output) {
     {
       
       # Get filtered data
-      d_payout <- as.data.table(react_d_filter())
+      # d_smry <- as.data.table(react_d_filter() |> filter(pay_ftr > 0))
+      d_payout <- 
+        react_d_filter() |> 
+        lazy_dt() |>
+        filter(pay_ftr > 0) |>
+        filter(stake > 0) |>
+        as.data.table()
 
       # Apply clip to corrV2
       d_payout[, corrV2_final := corrV2]
@@ -821,7 +845,13 @@ server <- function(input, output) {
     {
       
       # Get filtered data
-      d_payout <- as.data.table(react_d_filter())
+      # d_payout <- as.data.table(react_d_filter() |> filter(pay_ftr > 0))
+      d_payout <- 
+        react_d_filter() |> 
+        lazy_dt() |>
+        filter(pay_ftr > 0) |>
+        filter(stake > 0) |>
+        as.data.table()
       
       # Apply clip to corrV2
       d_payout[, corrV2_final := corrV2]
@@ -864,6 +894,80 @@ server <- function(input, output) {
     })
   
   
+  react_d_performance_summary <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Get filtered data
+      d_pref <- as.data.table(react_d_filter())
+      
+      # Add 2xCORRv2 + 1xTC
+      d_pref[, twoC_oneT := 2*corrV2 + tc]
+      
+      # Calculate some high level stats
+      d_pref <- 
+        d_pref |>
+        lazy_dt() |>
+        group_by(model) |>
+        summarise(total_rounds = n(),
+                  
+                  avg_corrV2 = mean(corrV2, na.rm = T),
+                  sharpe_corrV2 = mean(corrV2, na.rm = T) / sd(corrV2, na.rm = T),
+                  # mdd_corrV2 = maxdrawdown(corrV2),
+                  
+                  avg_tc = mean(tc, na.rm = T),
+                  sharpe_tc = mean(tc, na.rm = T) / sd(tc, na.rm = T),
+                  # mdd_tc = maxdrawdown(tc),
+                  
+                  avg_2C1T = mean(twoC_oneT, na.rm = T),
+                  sharpe_2C1T = mean(twoC_oneT, na.rm = T) / sd(tc, na.rm = T)
+                  # mdd_2C1T = maxdrawdown(twoC_oneT)
+                  
+        ) |> as.data.table()
+      
+      # Return
+      d_pref
+      
+    })
+  
+  
+  react_d_performance_summary_example <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Get filtered data
+      d_pref <- as.data.table(react_d_filter_example())
+      
+      # Add 2xCORRv2 + 1xTC
+      d_pref[, twoC_oneT := 2*corrV2 + tc]
+      
+      # Calculate some high level stats
+      d_pref <- 
+        d_pref |>
+        lazy_dt() |>
+        group_by(model) |>
+        summarise(total_rounds = n(),
+                  
+                  avg_corrV2 = mean(corrV2, na.rm = T),
+                  sharpe_corrV2 = mean(corrV2, na.rm = T) / sd(corrV2, na.rm = T),
+                  # mdd_corrV2 = maxdrawdown(corrV2),
+                  
+                  avg_tc = mean(tc, na.rm = T),
+                  sharpe_tc = mean(tc, na.rm = T) / sd(tc, na.rm = T),
+                  # mdd_tc = maxdrawdown(tc),
+                  
+                  avg_2C1T = mean(twoC_oneT, na.rm = T),
+                  sharpe_2C1T = mean(twoC_oneT, na.rm = T) / sd(tc, na.rm = T)
+                  # mdd_2C1T = maxdrawdown(twoC_oneT)
+                  
+        ) |> as.data.table()
+      
+      # Return
+      d_pref
+      
+    })
+  
+
   
   
   # ============================================================================
@@ -893,8 +997,13 @@ server <- function(input, output) {
   output$text_payout_sim <- renderText({
     if (nrow(react_d_filter()) >= 1) "New Payout Simulation (NOTE: Experimental!)" else " "
   })
-  
-  
+
+  output$text_performance_models <- renderText({
+    if (nrow(react_d_filter()) >= 1) "KPIs Summary (Individual Models)" else " "
+  })
+
+
+
   
   # ============================================================================
   # Reactive valueBox outputs: Rounds 
@@ -1352,7 +1461,50 @@ server <- function(input, output) {
   })
   
   
-  
+  # Performance Summary
+  output$dt_performance_summary <- DT::renderDT({
+    
+    # Generate a new DT
+    DT::datatable(
+      
+      # Data
+      react_d_performance_summary(),
+      
+      # Other Options
+      rownames = FALSE,
+      extensions = "Buttons",
+      options =
+        list(
+          dom = 'Bflrtip', # https://datatables.net/reference/option/dom
+          buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
+          order = list(list(0, 'asc'), list(1, 'asc')),
+          pageLength = 100,
+          lengthMenu = c(10, 50, 100, 500, 1000),
+          columnDefs = list(list(className = 'dt-center', targets = "_all")))
+    ) |>
+      
+      # Reformat individual columns
+      formatRound(columns = c("avg_corrV2", "sharpe_corrV2",
+                              "avg_tc", "sharpe_tc",
+                              "avg_2C1T", "sharpe_2C1T"
+                              ),
+                  digits = 4) |>
+      
+      formatStyle(columns = c("avg_corrV2", "sharpe_corrV2",
+                              "avg_tc", "sharpe_tc",
+                              "avg_2C1T", "sharpe_2C1T"
+                              ),
+                  color = styleInterval(cuts = c(-1e-15, 1e-15),
+                                        values = c("#D24141", "#D1D1D1", "#00A800")))
+      
+      # formatStyle(columns = c("model",
+      #                         "sum_pay_2C1T", "sum_pay_1C3T",
+      #                         "shp_pay_2C1T", "shp_pay_1C3T"
+      # ), fontWeight = "bold")
+    
+  })
+
+
   
   # ============================================================================
   # Reactive: Model Performance Charts
