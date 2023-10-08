@@ -322,7 +322,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("KPIs (Models)",
+                            tabPanel("KPI (CORR+TC)",
                                      
                                      br(),
                                      
@@ -365,6 +365,17 @@ ui <- shinydashboardPlus::dashboardPage(
                                      br()
 
                             ),
+                            
+                            
+                            # tabPanel("KPI (All)",
+                            #          
+                            #          br(),
+                            #          
+                            #          markdown("xxx"),
+                            #          
+                            #          br()
+                            # ),
+
 
                             
                             tabPanel("Payout (Overview)",
@@ -974,7 +985,7 @@ server <- function(input, output) {
   })
 
   output$text_performance_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "KPIs Summary (Individual Models)" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Analysis (CORR and TC)" else " "
   })
   
   output$text_performance_models_note <- renderText({
@@ -982,7 +993,7 @@ server <- function(input, output) {
   })
   
   output$text_performance_chart <- renderText({
-    if (nrow(react_d_filter()) >= 1) "Model Performance Comparison" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Charts" else " "
   })
   
   
@@ -1144,7 +1155,7 @@ server <- function(input, output) {
       ylab("Round Payout (NMR)")
     
     # Generate plotly
-    ggplotly(p, tooltip = "text")
+    ggplotly(p, height = 500, tooltip = "text")
     
   })
   
@@ -1194,7 +1205,7 @@ server <- function(input, output) {
       ylab("Round Payout (NMR)")
     
     # Generate plotly
-    ggplotly(p, tooltip = "text")
+    ggplotly(p, height = 500, tooltip = "text")
     
   })
   
@@ -1251,7 +1262,7 @@ server <- function(input, output) {
     p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed") # fixed
     
     # Dynamic height adjustment
-    height <- 600 # default minimum height
+    height <- 500 # default minimum height
     if (n_model >= 10) height = 800
     if (n_model >= 15) height = 1000
     if (n_model >= 20) height = 1200
