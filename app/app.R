@@ -328,13 +328,24 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      h3(strong(textOutput(outputId = "text_performance_models"))),
                                      
-                                     br(),
-                                     
-                                     DTOutput("dt_performance_summary"),
+                                     h4(textOutput(outputId = "text_performance_models_note")),
                                      
                                      br(),
                                      
-                                     markdown("#### **Notes**:
+                                     fluidRow(
+                                       column(width = 6, plotlyOutput("plot_performance_avg")),
+                                       column(width = 6, plotlyOutput("plot_performance_sharpe"))
+                                     ),
+                                     
+                                     br(),
+                                     br(),
+                                     br(),
+                                     
+                                     fluidRow(DTOutput("dt_performance_summary"),
+                                              
+                                              br(),
+                                              
+                                              markdown("#### **Notes**:
                                               
                                               - **avg_corrV2**: Average `CORRv2`
                                               - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
@@ -346,9 +357,13 @@ ui <- shinydashboardPlus::dashboardPage(
                                               - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
                                               
                                               "),
+                                              
+                                              br()
+                                     ),
                                      
+
                                      br()
-                                     
+
                             ),
                             
                             
@@ -781,8 +796,7 @@ server <- function(input, output) {
       d_smry
       
     })
-  
-  
+
   
   react_d_payout_sim_model <- eventReactive(
     input$button_filter,
@@ -931,45 +945,6 @@ server <- function(input, output) {
     })
   
   
-  react_d_performance_summary_example <- eventReactive(
-    input$button_filter,
-    {
-      
-      # Get filtered data
-      d_pref <- as.data.table(react_d_filter_example())
-      
-      # Add 2xCORRv2 + 1xTC
-      d_pref[, twoC_oneT := 2*corrV2 + tc]
-      
-      # Calculate some high level stats
-      d_pref <- 
-        d_pref |>
-        lazy_dt() |>
-        group_by(model) |>
-        summarise(total_rounds = n(),
-                  
-                  avg_corrV2 = mean(corrV2, na.rm = T),
-                  sharpe_corrV2 = mean(corrV2, na.rm = T) / sd(corrV2, na.rm = T),
-                  # mdd_corrV2 = maxdrawdown(corrV2),
-                  
-                  avg_tc = mean(tc, na.rm = T),
-                  sharpe_tc = mean(tc, na.rm = T) / sd(tc, na.rm = T),
-                  # mdd_tc = maxdrawdown(tc),
-                  
-                  avg_2C1T = mean(twoC_oneT, na.rm = T),
-                  sharpe_2C1T = mean(twoC_oneT, na.rm = T) / sd(tc, na.rm = T)
-                  # mdd_2C1T = maxdrawdown(twoC_oneT)
-                  
-        ) |> as.data.table()
-      
-      # Return
-      d_pref
-      
-    })
-  
-
-  
-  
   # ============================================================================
   # Reactive: Payout Value Boxes
   # ============================================================================
@@ -1001,8 +976,10 @@ server <- function(input, output) {
   output$text_performance_models <- renderText({
     if (nrow(react_d_filter()) >= 1) "KPIs Summary (Individual Models)" else " "
   })
-
-
+  
+  output$text_performance_models_note <- renderText({
+    if (nrow(react_d_filter()) >= 1) "NOTE: You may want to find out which models have high CORRv2 Sharpe and high TC Sharpe." else " "
+  })
 
   
   # ============================================================================
@@ -1289,6 +1266,82 @@ server <- function(input, output) {
   })
   
 
+  # KPI Chart: Avg Corr vs. Avg TC
+  output$plot_performance_avg <- renderPlotly({
+    
+    # Data
+    d_pref <- react_d_performance_summary()
+    
+    # Plot
+    p_avg <- ggplot(d_pref, 
+                    aes(x = avg_tc, y = avg_corrV2,
+                        text = paste("Model:", model, 
+                                     "\nAverage CORRv2:", round(avg_corrV2, 4),
+                                     "\nAverage TC:", round(avg_tc, 4))
+                    )) +
+      geom_point() +
+      theme(
+        panel.border = element_rect(fill = 'transparent', color = "grey", linewidth = 0.25),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.background = element_rect(fill = 'transparent'),
+        legend.box.background = element_rect(fill = 'transparent'),
+        axis.text.x = element_text(angle = 45, hjust = 1)
+      ) +
+      scale_x_continuous(breaks = breaks_pretty(5)) +
+      scale_y_continuous(breaks = breaks_pretty(5)) +
+      xlab("\nAverage TC") +
+      ylab("\nAverage CORRv2")
+    
+    # Convert to Plotly
+    ggplotly(p_avg, tooltip = "text")
+    
+  })
+  
+  
+  # KPI Chart: Corr Sharpe vs. TC Sharpe
+  output$plot_performance_sharpe <- renderPlotly({
+    
+    # Data
+    d_pref <- react_d_performance_summary()
+    
+    # Plot
+    p_sharpe <- ggplot(d_pref, 
+                    aes(x = sharpe_tc, y = sharpe_corrV2,
+                        text = paste("Model:", model, 
+                                     "\nSharpe Ratio of CORRv2:", round(sharpe_corrV2, 4),
+                                     "\nSharpe Ratio of TC:", round(sharpe_tc, 4))
+                    )) +
+      geom_point() +
+      theme(
+        panel.border = element_rect(fill = 'transparent', color = "grey", linewidth = 0.25),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.background = element_rect(fill = 'transparent'),
+        legend.box.background = element_rect(fill = 'transparent'),
+        axis.text.x = element_text(angle = 45, hjust = 1)
+      ) +
+      scale_x_continuous(breaks = breaks_pretty(5)) +
+      scale_y_continuous(breaks = breaks_pretty(5)) +
+      xlab("\nSharpe Ratio of TC") +
+      ylab("\nSharpe Ratio of CORRv2")
+    
+    # Convert to Plotly
+    ggplotly(p_sharpe, tooltip = "text")
+    
+  })
+  
+  
   
   # ============================================================================
   # Reactive: Payout Summary Table
@@ -1478,7 +1531,7 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 100,
+          pageLength = 10,
           lengthMenu = c(10, 50, 100, 500, 1000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
