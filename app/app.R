@@ -367,6 +367,57 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
+                            tabPanel("KPI Charts",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_performance_chart"))),
+                                     
+                                     br(),
+                                     
+                                     fluidRow(
+                                       
+                                       column(4,
+                                              markdown("## **CORR Multiper**"),
+                                              sliderInput(inputId = "multiper_corr", 
+                                                          label = "Numerai Classic Tournament Rounds",
+                                                          width = "100%",
+                                                          step = 0.5,
+                                                          min = 0,
+                                                          max = 2,
+                                                          value = 1)
+                                       ),
+                                       
+                                       column(4,
+                                              markdown("## **TC Multiper**"),
+                                              sliderInput(inputId = "multiper_tc", 
+                                                          label = "Numerai Classic Tournament Rounds",
+                                                          width = "100%",
+                                                          step = 0.5,
+                                                          min = 0,
+                                                          max = 1,
+                                                          value = 1)
+                                       ),
+                                       
+                                       
+                                       column(4, 
+                                              
+                                              markdown("## **Refresh**"),
+                                              br(),
+                                              actionBttn(inputId = "button_kpi_chart", 
+                                                         label = "Generate / Refresh",
+                                                         color = "primary",
+                                                         icon = icon("refresh"),
+                                                         style = "gradient",
+                                                         block = TRUE)
+                                       )
+                                       
+                                       
+                                     ) # end of fluidRow
+
+                                     ),
+                            
+                            
                             tabPanel("Payout (Overview)",
                                      
                                      br(),
@@ -632,7 +683,7 @@ server <- function(input, output) {
   })
   
   output$text_next <- renderText({
-    if (length(react_ls_model()) >= 1) "Step 3: Payout Summary (see ←)" else " "
+    if (length(react_ls_model()) >= 1) "Step 3: Performance Summary (see ←)" else " "
   })
   
   output$text_note <- renderText({
@@ -980,7 +1031,12 @@ server <- function(input, output) {
   output$text_performance_models_note <- renderText({
     if (nrow(react_d_filter()) >= 1) "NOTE: You may want to find out which models have high CORRv2 Sharpe and high TC Sharpe." else " "
   })
-
+  
+  output$text_performance_chart <- renderText({
+    if (nrow(react_d_filter()) >= 1) "Model Performance Comparison" else " "
+  })
+  
+  
   
   # ============================================================================
   # Reactive valueBox outputs: Rounds 
@@ -1295,6 +1351,8 @@ server <- function(input, output) {
       ) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       scale_y_continuous(breaks = breaks_pretty(5)) +
+      geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
+      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
       xlab("\nAverage TC") +
       ylab("\nAverage CORRv2")
     
@@ -1333,6 +1391,8 @@ server <- function(input, output) {
       ) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       scale_y_continuous(breaks = breaks_pretty(5)) +
+      geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
+      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
       xlab("\nSharpe Ratio of TC") +
       ylab("\nSharpe Ratio of CORRv2")
     
