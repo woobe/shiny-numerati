@@ -203,18 +203,16 @@ ui <- shinydashboardPlus::dashboardPage(
                                      label = " ",
                                      # choices = sort(Rnumerai::get_leaderboard()$username),
                                      choices = unique(c(sort(Rnumerai::get_leaderboard()$username),
-                                                        
                                                         "joe_the_validator_01",
                                                         "joe_the_validator_02",
                                                         "joe_the_validator_03",
                                                         "joe_the_validator_04",
-                                                        "joe_the_validator_05",
-                                                        
-                                                        "joe_the_hedgehog_01",
-                                                        "joe_the_hedgehog_02",
-                                                        "joe_the_hedgehog_03",
-                                                        "joe_the_hedgehog_04",
-                                                        "joe_the_hedgehog_05"
+                                                        "joe_the_validator_05"
+                                                        # "joe_the_hedgehog_01",
+                                                        # "joe_the_hedgehog_02",
+                                                        # "joe_the_hedgehog_03",
+                                                        # "joe_the_hedgehog_04",
+                                                        # "joe_the_hedgehog_05"
                                                         )
                                                       ),
                                      multiple = TRUE,
@@ -366,7 +364,7 @@ ui <- shinydashboardPlus::dashboardPage(
 
                             ),
                             
-                            
+                            # Coming soon
                             # tabPanel("KPI (All)",
                             #          
                             #          br(),
@@ -502,16 +500,16 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             tabPanel("Payout Chart (Models)",
-                                     # br(),
-                                     # materialSwitch(inputId = "switch_scale_payout", 
-                                     #                label = "Fixed Scale?",
-                                     #                value = TRUE,
-                                     #                status = "primary",
-                                     #                ),
+                                     
                                      br(),
+                                     
                                      h3(strong(textOutput(outputId = "text_payout_ind_models"))),
+                                     
                                      br(),
-                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual"))
+                                     
+                                     shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual")),
+                                     
+                                     br()
                             )
 
                 ) # end of tabsetPanel
