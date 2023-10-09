@@ -320,7 +320,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("KPI (CT)",
+                            tabPanel("KPI (C&T)",
                                      
                                      br(),
                                      
@@ -409,19 +409,28 @@ ui <- shinydashboardPlus::dashboardPage(
                                        ),
                                        
                                        
-                                       column(3,
-                                              markdown("#### **Hide Pending Rounds?**"),
+                                       column(2,
+                                              markdown("#### **Hide Pending**"),
                                               switchInput(
                                                 inputId = "kpi_hide_pending",
                                                 onLabel = "Yes",
                                                 offLabel = "No",
-                                                value = FALSE)
+                                                value = TRUE)
                                        ),
                                        
                                        column(2,
-                                              markdown("#### **Cumulative?**"),
+                                              markdown("#### **Cumulative**"),
                                               switchInput(
-                                                inputId = "kpi_culmulative",
+                                                inputId = "kpi_cumulative",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = TRUE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Facet**"),
+                                              switchInput(
+                                                inputId = "kpi_facet",
                                                 onLabel = "Yes",
                                                 offLabel = "No",
                                                 value = FALSE)
@@ -429,20 +438,19 @@ ui <- shinydashboardPlus::dashboardPage(
                                        
                                        
                                      ),
-                                     
-                                     br(),
-                                     
-                                     h4(strong(textOutput(outputId = "text_performance_chart_title"))),
-                                     
-                                     markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)"),
-                                     
-                                     br(),
-                                     
+
                                      h4(strong(textOutput(outputId = "text_performance_chart_data"))),
                                      
                                      br(),
                                      
                                      DTOutput("dt_kpi"),
+                                     
+                                     br(),
+                                     br(),
+                                     
+                                     h4(strong(textOutput(outputId = "text_performance_chart_title"))),
+                                     
+                                     fluidRow(column(12, plotlyOutput("plot_kpi"))),
                                      
                                      br()
                                      
@@ -516,7 +524,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout (Simulation)",
+                            tabPanel("Payout (Sim)",
                                      
                                      br(),
                                      
@@ -642,6 +650,11 @@ ui <- shinydashboardPlus::dashboardPage(
               markdown("## **Acknowledgements**"),
               markdown("- #### This hobby project was inspired by Rajiv's <b><a href='https://huggingface.co/spaces/rajistics/shiny-kmeans' target='_blank'>shiny-kmeans</a></b> on 🤗 Spaces."),
               markdown('- #### The <b><a href="https://linktr.ee/jofaichow" target="_blank">Rnumerai</a></b> package from Omni Analytics Group.'),
+              
+              br(),
+              markdown("## **Source Code**"),
+              markdown("- #### GitHub: https://github.com/woobe/shiny-numerati"),
+              markdown("- #### Hugging Face: https://huggingface.co/spaces/jofaichow/shiny-numerati/tree/main"),
               
               br(),
               markdown("## **Changelog**"),
@@ -1070,7 +1083,7 @@ server <- function(input, output) {
       d_pref <- d_pref[!is.na(KPI)]
       
       # Calculate Cumulative KPI (if needed) 
-      if (input$kpi_culmulative) {
+      if (input$kpi_cumulative) {
         
         # Sort before doing cumsum
         setorderv(d_pref, c("model", "round"))
@@ -1137,7 +1150,7 @@ server <- function(input, output) {
   })
   
   output$text_performance_chart_title <- renderText({
-    if (nrow(react_d_filter()) >= 1) "One Big Chart (Coming Soon!)" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Chart" else " "
   })
   
   output$text_performance_chart_data <- renderText({
@@ -1524,6 +1537,98 @@ server <- function(input, output) {
   })
   
   
+  # KPI Chart: All KPIs
+  output$plot_kpi <- renderPlotly({
+    
+    # Data
+    d_kpi <- react_d_kpi()
+    
+    # Dynamic Labels
+    if (input$kpi_choice == "CORRv2: CORRelation with target cyrus_v4_20") y_label <- "CORRv2"
+    if (input$kpi_choice == "TC: True Contribtuion to the hedge fund's returns") y_label <- "TC"
+    if (input$kpi_choice == "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features") y_label <- "FNCv3"
+    if (input$kpi_choice == "CWMM: Correlation With the Meta Model") y_label <- "CWMM"
+    if (input$kpi_choice == "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR") y_label <- "MCWNM"
+    if (input$kpi_choice == "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR") y_label <- "APCWNM"
+    
+    if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2") y_label <- "0.5 x CORRv2"
+    if (input$kpi_choice == "Score Multipliers: 1.5 x CORRv2") y_label <- "1.5 x CORRv2"
+    if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2") y_label <- "2.0 x CORRv2"
+    if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 0.5 x TC") y_label <- "2.0 x CORRv2 + 0.5 x TC"
+    if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC") y_label <- "2.0 x CORRv2 + 1.0 x TC"
+    
+    if (input$kpi_choice == "Percentile: CORRv2") y_label <- "CORRv2 Percentile"
+    if (input$kpi_choice == "Percentile: TC") y_label <- "TC Percentile"
+    if (input$kpi_choice == "Percentile: FNCv3") y_label <- "FNCv3 Percentile"
+    
+    if (input$kpi_choice == "Payout") y_label <- "Payout (NMR)"
+    if (input$kpi_choice == "Rate of Return (%): Payout / Stake x 100") y_label <- "Rate of Return (%)"
+    
+    # If cumulative
+    if (input$kpi_cumulative) y_label <- paste("Cumulative", y_label)
+    
+    # Other settings
+    y_min <- min(d_kpi$KPI) * 0.95
+    if (y_min > 0) y_min <- 0
+    y_max <- max(d_kpi$KPI) * 1.05
+    height <- 500 # default minimum height
+
+    # Plot 
+    p <- ggplot(d_kpi, aes(x = round, y = KPI, 
+                           ymin = y_min, ymax = y_max,
+                           color = model)) +
+      geom_line() +
+      theme(
+        panel.border = element_rect(fill = 'transparent', color = "grey", linewidth = 0.25),
+        panel.background = element_rect(fill = 'transparent'),
+        plot.background = element_rect(fill = 'transparent', color = NA),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(fill = 'transparent'),
+        strip.text = element_text(),
+        strip.clip = "on",
+        legend.background = element_rect(fill = 'transparent'),
+        legend.box.background = element_rect(fill = 'transparent'),
+        axis.text.x = element_text(angle = 45, hjust = 1)
+      ) +
+      scale_x_continuous(breaks = breaks_pretty(5)) +
+      scale_y_continuous(breaks = breaks_pretty(5)) +
+      geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed") +
+      ylab(y_label) +
+      xlab("\nTournament Round")
+    
+    # Facet wrap?
+    if (input$kpi_facet) {
+      
+      # Extract no. of models
+      n_model <- length(unique(d_kpi$model))
+      
+      # Add facet_wrap
+      p <- p + facet_wrap(. ~ model, ncol = 5, scales = "fixed") # fixed
+      
+      # Dynamic height adjustment
+      if (n_model >= 10) height = 800
+      if (n_model >= 15) height = 1000
+      if (n_model >= 20) height = 1200
+      if (n_model >= 25) height = 1400
+      if (n_model >= 30) height = 1600
+      if (n_model >= 35) height = 1800
+      if (n_model >= 40) height = 2000
+      if (n_model >= 45) height = 2200
+      if (n_model >= 50) height = 2400
+      if (n_model >= 55) height = 2600
+      if (n_model >= 60) height = 2800
+      if (n_model >= 65) height = 3000
+
+    }
+    
+    # Convert to Plotly
+    ggplotly(p, height = height)
+    
+
+  })
+  
+  
   
   # ============================================================================
   # Reactive: Payout Summary Table
@@ -1752,8 +1857,8 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 10,
-          lengthMenu = c(10, 50, 100, 500, 1000),
+          pageLength = 5,
+          lengthMenu = c(5, 10, 50, 100, 500, 1000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
       
@@ -1765,6 +1870,8 @@ server <- function(input, output) {
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
     
   })
+  
+  
   
   # ============================================================================
   # Reactive: Model Performance Charts
