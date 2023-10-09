@@ -213,8 +213,8 @@ ui <- shinydashboardPlus::dashboardPage(
                                                         # "joe_the_hedgehog_03",
                                                         # "joe_the_hedgehog_04",
                                                         # "joe_the_hedgehog_05"
-                                                        )
-                                                      ),
+                                     )
+                                     ),
                                      multiple = TRUE,
                                      width = "100%",
                                      options = list(
@@ -320,7 +320,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 tabsetPanel(type = "tabs",
                             
                             
-                            tabPanel("KPI (CORR+TC)",
+                            tabPanel("KPI (CT)",
                                      
                                      br(),
                                      
@@ -359,22 +359,96 @@ ui <- shinydashboardPlus::dashboardPage(
                                               br()
                                      ),
                                      
-
+                                     
                                      br()
-
+                                     
                             ),
                             
                             # Coming soon
-                            # tabPanel("KPI (All)",
-                            #          
-                            #          br(),
-                            #          
-                            #          markdown("xxx"),
-                            #          
-                            #          br()
-                            # ),
-
-
+                            tabPanel("KPI (All)",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_performance_chart"))),
+                                     
+                                     h4(textOutput(outputId = "text_performance_chart_note")),
+                                     
+                                     br(),
+                                     
+                                     # Controls
+                                     
+                                     fluidRow(
+                                       
+                                       column(6, 
+                                              markdown("#### **Pick ONE of the KPIs:**"),
+                                              pickerInput(
+                                                inputId = "kpi_choice",
+                                                choices = c("CORRv2: CORRelation with target cyrus_v4_20",
+                                                            "TC: True Contribtuion to the hedge fund's returns",
+                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
+                                                            # "CORJ60: CORRelation with target Jerome_v4_60", # add this later
+                                                            
+                                                            "CWMM: Correlation With the Meta Model",
+                                                            "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
+                                                            "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR",
+                                                            
+                                                            "Score Multipliers: 0.5 x CORRv2",
+                                                            "Score Multipliers: 1.5 x CORRv2",
+                                                            "Score Multipliers: 2.0 x CORRv2",
+                                                            "Score Multipliers: 2.0 x CORRv2 + 0.5 x TC",
+                                                            "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC",
+                                                            
+                                                            "Percentile: CORRv2",
+                                                            "Percentile: TC",
+                                                            "Percentile: FNCv3",
+                                                            
+                                                            "Payout",
+                                                            "Rate of Return (%): Payout / Stake x 100"),
+                                                multiple = FALSE,
+                                                width = "95%")
+                                       ),
+                                       
+                                       
+                                       column(3,
+                                              markdown("#### **Hide Pending Rounds?**"),
+                                              switchInput(
+                                                inputId = "kpi_hide_pending",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Cumulative?**"),
+                                              switchInput(
+                                                inputId = "kpi_culmulative",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       )
+                                       
+                                       
+                                     ),
+                                     
+                                     br(),
+                                     
+                                     h4(strong(textOutput(outputId = "text_performance_chart_title"))),
+                                     
+                                     markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)"),
+                                     
+                                     br(),
+                                     
+                                     h4(strong(textOutput(outputId = "text_performance_chart_data"))),
+                                     
+                                     br(),
+                                     
+                                     DTOutput("dt_kpi"),
+                                     
+                                     br()
+                                     
+                            ),
+                            
+                            
                             
                             tabPanel("Payout (Overview)",
                                      
@@ -511,7 +585,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      br()
                             )
-
+                            
                 ) # end of tabsetPanel
                 
               ) # end of fluidPage
@@ -584,6 +658,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.8** — Various improvements in `Payout Summary`
                 - #### **0.1.9** — Added `Payout Sim` based on new Corr and TC multipier settings
                 - #### **0.2.0** — Replaced `Payout Summary` with `Performance Summary`. Added KPIs summary.
+                - #### **0.2.1** — Added `KPI (All)` (work in progress).
                 "),
               
               br(),
@@ -602,7 +677,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.0"))
+    right = paste0("Version 0.2.1"))
   
 )
 
@@ -663,7 +738,7 @@ server <- function(input, output) {
     }
   )
   
-
+  
   
   # ============================================================================
   # Reactive: DataTable
@@ -805,7 +880,7 @@ server <- function(input, output) {
       d_smry
       
     })
-
+  
   
   react_d_payout_sim_model <- eventReactive(
     input$button_filter,
@@ -819,7 +894,7 @@ server <- function(input, output) {
         filter(pay_ftr > 0) |>
         filter(stake > 0) |>
         as.data.table()
-
+      
       # Apply clip to corrV2
       d_payout[, corrV2_final := corrV2]
       d_payout[corrV2 > 0.25, corrV2_final := 0.25]
@@ -856,7 +931,7 @@ server <- function(input, output) {
           
         ) |>
         as.data.table()
-
+      
       # Return
       d_payout_smry
       
@@ -954,6 +1029,69 @@ server <- function(input, output) {
     })
   
   
+  react_d_kpi <- eventReactive(
+    input$button_filter,
+    {
+      
+      # Get filtered data
+      d_pref <- as.data.table(react_d_filter())
+      
+      # Hide Pending?
+      if (input$kpi_hide_pending) d_pref <- d_pref[resolved == TRUE]
+      
+      # Add Rate of Return
+      d_pref[stake >0, rate_of_return := payout / stake * 100]
+      
+      # Extract Raw KPI
+      if (input$kpi_choice == "CORRv2: CORRelation with target cyrus_v4_20") d_pref[, KPI := corrV2]
+      if (input$kpi_choice == "TC: True Contribtuion to the hedge fund's returns") d_pref[, KPI := tc]
+      if (input$kpi_choice == "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features") d_pref[, KPI := fncV3]
+      if (input$kpi_choice == "CWMM: Correlation With the Meta Model") d_pref[, KPI := corr_meta]
+      if (input$kpi_choice == "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR") d_pref[, KPI := mcwnm]
+      if (input$kpi_choice == "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR") d_pref[, KPI := apcwnm]
+      
+      # Calculate Score Multiplies
+      if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2") d_pref[, KPI := 0.5 * corrV2]
+      if (input$kpi_choice == "Score Multipliers: 1.5 x CORRv2") d_pref[, KPI := 1.5 * corrV2]
+      if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2") d_pref[, KPI := 2.0 * corrV2]
+      if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 0.5 x TC") d_pref[, KPI := 2.0 * corrV2 + 0.5 * tc]
+      if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC") d_pref[, KPI := 2.0 * corrV2 + 1.0 * tc]
+      
+      # Extract Percentile
+      if (input$kpi_choice == "Percentile: CORRv2") d_pref[, KPI := corrV2_pct]
+      if (input$kpi_choice == "Percentile: TC") d_pref[, KPI := tc_pct]
+      if (input$kpi_choice == "Percentile: FNCv3") d_pref[, KPI := fncV3_pct]
+      
+      # Extract Payout info
+      if (input$kpi_choice == "Payout") d_pref[, KPI := payout]
+      if (input$kpi_choice == "Rate of Return (%): Payout / Stake x 100") d_pref[, KPI := rate_of_return]
+      
+      # Remove rows with NA (quick hack for now)
+      d_pref <- d_pref[!is.na(KPI)]
+      
+      # Calculate Cumulative KPI (if needed) 
+      if (input$kpi_culmulative) {
+        
+        # Sort before doing cumsum
+        setorderv(d_pref, c("model", "round"))
+        
+        # The data.table way
+        d_pref[, KPI := cumsum(KPI), "model"]
+        
+      }
+      
+      # Trim and sort
+      d_trim <- d_pref[, c("model", "round", "date_resolved", "resolved", "KPI")]
+      setorderv(d_trim, c("model", "round"))
+      
+      # Return
+      d_trim
+      
+    })
+  
+  
+  
+  
   # ============================================================================
   # Reactive: Payout Value Boxes
   # ============================================================================
@@ -981,9 +1119,9 @@ server <- function(input, output) {
   output$text_payout_sim <- renderText({
     if (nrow(react_d_filter()) >= 1) "New Payout Simulation (NOTE: Experimental!)" else " "
   })
-
+  
   output$text_performance_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "KPI Analysis (CORR and TC)" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Analysis (CORRv2 and TC)" else " "
   })
   
   output$text_performance_models_note <- renderText({
@@ -991,14 +1129,26 @@ server <- function(input, output) {
   })
   
   output$text_performance_chart <- renderText({
-    if (nrow(react_d_filter()) >= 1) "KPI Charts" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Analysis (Model Comparison)" else " "
   })
   
+  output$text_performance_chart_note <- renderText({
+    if (nrow(react_d_filter()) >= 1) "NOTE: Remember to refresh the chart (Step 5 ↑) after making any changes." else " "
+  })
+  
+  output$text_performance_chart_title <- renderText({
+    if (nrow(react_d_filter()) >= 1) "One Big Chart (Coming Soon!)" else " "
+  })
+  
+  output$text_performance_chart_data <- renderText({
+    if (nrow(react_d_filter()) >= 1) "KPI Data" else " "
+  })
   
   
   # ============================================================================
   # Reactive valueBox outputs: Rounds 
   # ============================================================================
+  
   
   output$payout_n_round_resolved <- renderValueBox({
     # Use rounds with stake > 0 only
@@ -1028,17 +1178,20 @@ server <- function(input, output) {
   # Reactive valueBox outputs: Payouts
   # ============================================================================
   
+  
   output$payout_resolved <- renderValueBox({
     valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == T, ]$payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Total Payout (Resolved)",
              color = "olive")
   })
   
+  
   output$payout_pending <- renderValueBox({
     valueBox(value = paste(as.character(format(round(sum(react_d_filter()[resolved == F, ]$payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Total Payout (Pending)",
              color = "yellow")
   })
+  
   
   output$payout_total <- renderValueBox({
     valueBox(value = paste(as.character(format(round(sum(react_d_filter()$payout, na.rm = T), 2), nsmall = 2)), "NMR"),
@@ -1051,12 +1204,14 @@ server <- function(input, output) {
   # Reactive valueBox outputs: Average Round Payouts
   # ============================================================================
   
+  
   output$payout_average_resolved <- renderValueBox({
     # Use rounds with stake > 0 only
     valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == T & total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)), "NMR"),
              subtitle = "Avg. Round Payout (Resolved)",
              color = "olive")
   })
+  
   
   output$payout_average_pending <- renderValueBox({
     # Use rounds with stake > 0 only
@@ -1065,6 +1220,7 @@ server <- function(input, output) {
              color = "yellow")
   })
   
+  
   output$payout_average <- renderValueBox({
     # Use rounds with stake > 0 only
     valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[total_stake > 0, ]$net_payout, na.rm = T), 2), nsmall = 2)), "NMR"),
@@ -1072,9 +1228,11 @@ server <- function(input, output) {
              color = "light-blue")
   })
   
+  
   # ============================================================================
   # Reactive valueBox outputs: Average Rate of Return
   # ============================================================================
+  
   
   output$payout_avg_ror_resolved <- renderValueBox({
     # Use rounds with stake > 0 only
@@ -1083,12 +1241,14 @@ server <- function(input, output) {
              color = "olive")
   })
   
+  
   output$payout_avg_ror_pending <- renderValueBox({
     # Use rounds with stake > 0 only
     valueBox(value = paste(as.character(format(round(mean(react_d_payout_summary()[resolved == F & total_stake > 0, ]$rate_of_return), 2), nsmall = 2)), "%"),
              subtitle = "Avg. Round ROR (Pending)",
              color = "yellow")
   })
+  
   
   output$payout_avg_ror <- renderValueBox({
     # Use rounds with stake > 0 only
@@ -1279,7 +1439,7 @@ server <- function(input, output) {
     
   })
   
-
+  
   # KPI Chart: Avg Corr vs. Avg TC
   output$plot_performance_avg <- renderPlotly({
     
@@ -1315,7 +1475,7 @@ server <- function(input, output) {
     # Add vline and hline if needed
     if (min(d_pref$avg_corrV2) <0) p_avg <- p_avg + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
     if (min(d_pref$avg_tc) <0) p_avg <- p_avg + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
-
+    
     # Convert to Plotly
     ggplotly(p_avg, tooltip = "text")
     
@@ -1330,11 +1490,11 @@ server <- function(input, output) {
     
     # Plot
     p_sharpe <- ggplot(d_pref, 
-                    aes(x = sharpe_tc, y = sharpe_corrV2,
-                        text = paste("Model:", model, 
-                                     "\nSharpe Ratio of CORRv2:", round(sharpe_corrV2, 4),
-                                     "\nSharpe Ratio of TC:", round(sharpe_tc, 4))
-                    )) +
+                       aes(x = sharpe_tc, y = sharpe_corrV2,
+                           text = paste("Model:", model, 
+                                        "\nSharpe Ratio of CORRv2:", round(sharpe_corrV2, 4),
+                                        "\nSharpe Ratio of TC:", round(sharpe_tc, 4))
+                       )) +
       geom_point() +
       theme(
         panel.border = element_rect(fill = 'transparent', color = "grey", linewidth = 0.25),
@@ -1483,7 +1643,7 @@ server <- function(input, output) {
       formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   digits = 2) |>
-
+      
       formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   color = styleInterval(cuts = c(-1e-15, 1e-15),
@@ -1562,24 +1722,49 @@ server <- function(input, output) {
       formatRound(columns = c("avg_corrV2", "sharpe_corrV2",
                               "avg_tc", "sharpe_tc",
                               "avg_2C1T", "sharpe_2C1T"
-                              ),
-                  digits = 4) |>
+      ),
+      digits = 4) |>
       
       formatStyle(columns = c("avg_corrV2", "sharpe_corrV2",
                               "avg_tc", "sharpe_tc",
                               "avg_2C1T", "sharpe_2C1T"
-                              ),
+      ),
+      color = styleInterval(cuts = c(-1e-15, 1e-15),
+                            values = c("#D24141", "#D1D1D1", "#00A800")))
+
+  })
+  
+  
+  # KPI Filter
+  output$dt_kpi <- DT::renderDT({
+    
+    # Generate a new DT
+    DT::datatable(
+      
+      # Data
+      react_d_kpi(),
+      
+      # Other Options
+      rownames = FALSE,
+      extensions = "Buttons",
+      options =
+        list(
+          dom = 'Bflrtip', # https://datatables.net/reference/option/dom
+          buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
+          order = list(list(0, 'asc'), list(1, 'asc')),
+          pageLength = 10,
+          lengthMenu = c(10, 50, 100, 500, 1000),
+          columnDefs = list(list(className = 'dt-center', targets = "_all")))
+    ) |>
+      
+      # Reformat individual columns
+      formatRound(columns = c("KPI"), digits = 4) |>
+      
+      formatStyle(columns = c("KPI"), 
                   color = styleInterval(cuts = c(-1e-15, 1e-15),
                                         values = c("#D24141", "#D1D1D1", "#00A800")))
-      
-      # formatStyle(columns = c("model",
-      #                         "sum_pay_2C1T", "sum_pay_1C3T",
-      #                         "shp_pay_2C1T", "shp_pay_1C3T"
-      # ), fontWeight = "bold")
     
   })
-
-
   
   # ============================================================================
   # Reactive: Model Performance Charts
