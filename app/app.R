@@ -670,8 +670,9 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.1.7** — Added CoE Meetup GitHub page to `Community`
                 - #### **0.1.8** — Various improvements in `Payout Summary`
                 - #### **0.1.9** — Added `Payout Sim` based on new Corr and TC multipier settings
-                - #### **0.2.0** — Replaced `Payout Summary` with `Performance Summary`. Added KPIs summary.
-                - #### **0.2.1** — Added `KPI (All)` (work in progress).
+                - #### **0.2.0** — Replaced `Payout Summary` with `Performance Summary`. Added KPIs summary
+                - #### **0.2.1** — Added `KPI (All)`
+                - #### **0.2.2** — Sped up chart rendering with `toWebGL()`
                 "),
               
               br(),
@@ -690,7 +691,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.1"))
+    right = paste0("Version 0.2.2"))
   
 )
 
@@ -1326,7 +1327,7 @@ server <- function(input, output) {
       ylab("Round Payout (NMR)")
     
     # Generate plotly
-    ggplotly(p, height = 500, tooltip = "text")
+    ggplotly(p, height = 500, tooltip = "text") |> toWebGL()
     
   })
   
@@ -1376,7 +1377,7 @@ server <- function(input, output) {
       ylab("Round Payout (NMR)")
     
     # Generate plotly
-    ggplotly(p, height = 500, tooltip = "text")
+    ggplotly(p, height = 500, tooltip = "text") |> toWebGL()
     
   })
   
@@ -1448,7 +1449,7 @@ server <- function(input, output) {
     if (n_model >= 65) height = 3000
     
     # Generate plotly
-    ggplotly(p, height = height, tooltip = "text")
+    ggplotly(p, height = height, tooltip = "text") |> toWebGL()
     
   })
   
@@ -1490,7 +1491,7 @@ server <- function(input, output) {
     if (min(d_pref$avg_tc) <0) p_avg <- p_avg + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
     
     # Convert to Plotly
-    ggplotly(p_avg, tooltip = "text")
+    ggplotly(p_avg, tooltip = "text") |> toWebGL()
     
   })
   
@@ -1532,7 +1533,7 @@ server <- function(input, output) {
     if (min(d_pref$sharpe_tc) <0) p_sharpe <- p_sharpe + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
     
     # Convert to Plotly
-    ggplotly(p_sharpe, tooltip = "text")
+    ggplotly(p_sharpe, tooltip = "text")  |> toWebGL()
     
   })
   
@@ -1623,7 +1624,7 @@ server <- function(input, output) {
     }
     
     # Convert to Plotly
-    ggplotly(p, height = height)
+    ggplotly(p, height = height) |> toWebGL()
     
 
   })
