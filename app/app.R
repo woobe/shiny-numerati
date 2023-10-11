@@ -408,16 +408,6 @@ ui <- shinydashboardPlus::dashboardPage(
                                                 width = "95%")
                                        ),
                                        
-                                       
-                                       column(2,
-                                              markdown("#### **Hide Pending**"),
-                                              switchInput(
-                                                inputId = "kpi_hide_pending",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = TRUE)
-                                       ),
-                                       
                                        column(2,
                                               markdown("#### **Cumulative**"),
                                               switchInput(
@@ -425,6 +415,15 @@ ui <- shinydashboardPlus::dashboardPage(
                                                 onLabel = "Yes",
                                                 offLabel = "No",
                                                 value = TRUE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Hide Pending**"),
+                                              switchInput(
+                                                inputId = "kpi_hide_pending",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
                                        ),
                                        
                                        column(2,
