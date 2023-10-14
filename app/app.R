@@ -202,12 +202,12 @@ ui <- shinydashboardPlus::dashboardPage(
                          pickerInput(inputId = "model",
                                      label = " ",
                                      # choices = sort(Rnumerai::get_leaderboard()$username),
-                                     choices = unique(c(sort(Rnumerai::get_leaderboard()$username),
-                                                        "joe_the_validator_01",
-                                                        "joe_the_validator_02",
-                                                        "joe_the_validator_03",
-                                                        "joe_the_validator_04",
-                                                        "joe_the_validator_05"
+                                     choices = unique(c(sort(Rnumerai::get_leaderboard()$username)
+                                                        # "joe_the_validator_01",
+                                                        # "joe_the_validator_02",
+                                                        # "joe_the_validator_03",
+                                                        # "joe_the_validator_04",
+                                                        # "joe_the_validator_05"
                                                         # "joe_the_hedgehog_01",
                                                         # "joe_the_hedgehog_02",
                                                         # "joe_the_hedgehog_03",
