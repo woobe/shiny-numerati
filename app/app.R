@@ -21,12 +21,9 @@ library(parallel)
 library(Rnumerai)
 
 
-# Options
-options(timeout = 100000000)
-
-
 # Pre-download all usernames
-ls_username <- sort(Rnumerai::get_leaderboard()$username)
+options(timeout = max(1000, getOption("timeout")))
+ls_username <- sort(get_leaderboard()$username)
 
 
 # ==============================================================================
