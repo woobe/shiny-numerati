@@ -529,7 +529,9 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      br(),
                                      
-                                     markdown("![new_tc_change](https://i.ibb.co/XjKwtzr/screenshot-2023-10-05-at-10.png)"),
+                                     # markdown("![new_tc_change](https://i.ibb.co/XjKwtzr/screenshot-2023-10-05-at-10.png)"),
+                                     markdown("![new_mmc](https://forum.numer.ai/uploads/default/optimized/2X/0/0b04785bd7167ff261f26325bc926c107398e26a_2_1035x729.jpeg)"),
+                                     
                                      
                                      br(),
                                      
@@ -537,11 +539,13 @@ ui <- shinydashboardPlus::dashboardPage(
                                               
                                               - **sum_pay**: Sum of Payouts
                                               - **shp_pay**: Sharpe Ratio of Payouts
-                                              - **1C0T**: 1xCORRv2 + 0xTC
-                                              - **2C0T**: 2xCORRv2 + 0xTC (New Payout Mode)
-                                              - **2C1T**: 2xCORRv2 + 1xTC (New Payout Mode)
                                               - **1C3T**: 1xCORRv2 + 3xTC (Original Degen Mode)
+                                              - **1C0T**: 1xCORRv2 + 0xTC (Until the End of 2023)
+                                              - **2C0T**: 2xCORRv2 + 0xTC (Until the End of 2023)
+                                              - **2C1T**: 2xCORRv2 + 1xTC (Until the End of 2023)
+                                              - **2MMC**: 1xMMCv2 (Upcoming Payout Mode) - See https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794
                                               
+
                                               "),
                                      
                                      br(),
@@ -671,6 +675,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.1** — Added `KPI (All)`
                 - #### **0.2.2** — Sped up chart rendering with `toWebGL()`
                 - #### **0.2.3** — Added new `MMC` - Ref: https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794/27
+                - #### **0.2.4** — Added `MMC` to `Payout Sim`
                 "),
               
               br(),
@@ -689,7 +694,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.3"))
+    right = paste0("Version 0.2.4"))
   
 )
 
@@ -922,6 +927,7 @@ server <- function(input, output) {
       d_payout[, payout_2C0T := (2*corrV2_final) * stake * pay_ftr]
       d_payout[, payout_2C1T := (2*corrV2_final + tc_final) * stake * pay_ftr]
       d_payout[, payout_1C3T := (corrV2_final + 3*tc_final) * stake * pay_ftr]
+      d_payout[, payout_2MMC := (2*mmc) * stake * pay_ftr]
       
       # Summarise
       d_payout_smry <-
@@ -935,11 +941,13 @@ server <- function(input, output) {
           sum_pay_2C0T = sum(payout_2C0T, na.rm = T),
           sum_pay_2C1T = sum(payout_2C1T, na.rm = T),
           sum_pay_1C3T = sum(payout_1C3T, na.rm = T),
+          sum_pay_2MMC = sum(payout_2MMC, na.rm = T),
           
           shp_pay_1C0T = mean(payout_1C0T, na.rm = T) / sd(payout_1C0T, na.rm = T),
           shp_pay_2C0T = mean(payout_2C0T, na.rm = T) / sd(payout_2C0T, na.rm = T),
           shp_pay_2C1T = mean(payout_2C1T, na.rm = T) / sd(payout_2C1T, na.rm = T),
-          shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T)
+          shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T),
+          shp_pay_2MMC = mean(payout_2MMC, na.rm = T) / sd(payout_2MMC, na.rm = T)
           
         ) |>
         as.data.table()
@@ -978,6 +986,7 @@ server <- function(input, output) {
       d_payout[, payout_2C0T := (2*corrV2_final) * stake * pay_ftr]
       d_payout[, payout_2C1T := (2*corrV2_final + tc_final) * stake * pay_ftr]
       d_payout[, payout_1C3T := (corrV2_final + 3*tc_final) * stake * pay_ftr]
+      d_payout[, payout_2MMC := (2*mmc) * stake * pay_ftr]
       
       # Summarise
       d_payout_smry <-
@@ -989,11 +998,13 @@ server <- function(input, output) {
           sum_pay_2C0T = sum(payout_2C0T, na.rm = T),
           sum_pay_2C1T = sum(payout_2C1T, na.rm = T),
           sum_pay_1C3T = sum(payout_1C3T, na.rm = T),
+          sum_pay_2MMC = sum(payout_2MMC, na.rm = T),
           
           shp_pay_1C0T = mean(payout_1C0T, na.rm = T) / sd(payout_1C0T, na.rm = T),
           shp_pay_2C0T = mean(payout_2C0T, na.rm = T) / sd(payout_2C0T, na.rm = T),
           shp_pay_2C1T = mean(payout_2C1T, na.rm = T) / sd(payout_2C1T, na.rm = T),
-          shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T)
+          shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T),
+          shp_pay_2MMC = mean(payout_2MMC, na.rm = T) / sd(payout_2MMC, na.rm = T)
           
         ) |>
         as.data.table()
@@ -1747,17 +1758,20 @@ server <- function(input, output) {
       
       # Reformat individual columns
       formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "sum_pay_2MMC", "shp_pay_2MMC",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   digits = 2) |>
       
       formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "sum_pay_2MMC", "shp_pay_2MMC",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   color = styleInterval(cuts = c(-1e-15, 1e-15),
                                         values = c("#D24141", "#D1D1D1", "#00A800"))) |>
       
       formatStyle(columns = c("model", 
-                              "sum_pay_2C1T", "sum_pay_1C3T",
-                              "shp_pay_2C1T", "shp_pay_1C3T"
+                              "sum_pay_2MMC", "shp_pay_2MMC"
+                              # "sum_pay_2C1T", "sum_pay_1C3T",
+                              # "shp_pay_2C1T", "shp_pay_1C3T"
       ), fontWeight = "bold")
     
   })
@@ -1787,17 +1801,18 @@ server <- function(input, output) {
       
       # Reformat individual columns
       formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "sum_pay_2MMC", "shp_pay_2MMC",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   digits = 2) |>
       
       formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
+                              "sum_pay_2MMC", "shp_pay_2MMC",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   color = styleInterval(cuts = c(-1e-15, 1e-15),
                                         values = c("#D24141", "#D1D1D1", "#00A800"))) |>
       
-      formatStyle(columns = c("sum_pay_2C1T", "sum_pay_1C3T",
-                              "shp_pay_2C1T", "shp_pay_1C3T"
-      ), fontWeight = "bold")
+      formatStyle(columns = c("sum_pay_2MMC", "shp_pay_2MMC"),
+                  fontWeight = "bold")
     
   })
   
