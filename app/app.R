@@ -22,14 +22,17 @@ library(Rnumerai)
 
 
 # Options
-options(datatable.showProgress = FALSE)
 options(timeout = 100000000)
-options(encoding = "UTF-8")
+
+
+# Pre-download all usernames
+ls_username <- sort(Rnumerai::get_leaderboard()$username)
 
 
 # ==============================================================================
 # Helper Functions
 # ==============================================================================
+
 
 # Download raw data
 download_raw_data <- function(model_name) {
@@ -48,6 +51,7 @@ download_raw_data <- function(model_name) {
   return(as.data.table(d_raw))
   
 }
+
 
 # Reformat
 reformat_data <- function(d_raw) {
@@ -91,6 +95,7 @@ reformat_data <- function(d_raw) {
   return(d_munged)
   
 }
+
 
 # Generate Colour Palette
 gen_custom_palette <- function(ls_model) {
@@ -210,7 +215,7 @@ ui <- shinydashboardPlus::dashboardPage(
                          
                          pickerInput(inputId = "model",
                                      label = " ",
-                                     choices = sort(Rnumerai::get_leaderboard()$username),
+                                     choices = ls_username,
                                      multiple = TRUE,
                                      width = "100%",
                                      options = list(
