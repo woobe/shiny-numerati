@@ -53,6 +53,7 @@ reformat_data <- function(d_raw) {
                 "corr20V2", "corr20V2Percentile",
                 "fncV3", "fncV3Percentile",
                 "tc", "tcPercentile",
+                "mmc", "mmcPercentile",
                 "corrWMetamodel",
                 "apcwnm", "mcwnm",
                 "roundPayoutFactor", "payout")
@@ -66,6 +67,7 @@ reformat_data <- function(d_raw) {
   d_munged[, corr20V2Percentile := round(corr20V2Percentile * 100, 6)]
   d_munged[, fncV3Percentile := round(fncV3Percentile * 100, 6)]
   d_munged[, tcPercentile := round(tcPercentile * 100, 6)]
+  d_munged[, mmcPercentile := round(mmcPercentile * 100, 6)]
   
   # Rename columns
   colnames(d_munged) <- c("model", "round", 
@@ -74,6 +76,7 @@ reformat_data <- function(d_raw) {
                           "corrV2", "corrV2_pct",
                           "fncV3", "fncV3_pct",
                           "tc", "tc_pct", 
+                          "mmc", "mmc_pct",
                           "corr_meta",
                           "apcwnm", "mcwnm",
                           "pay_ftr", "payout")
@@ -201,20 +204,7 @@ ui <- shinydashboardPlus::dashboardPage(
                          
                          pickerInput(inputId = "model",
                                      label = " ",
-                                     # choices = sort(Rnumerai::get_leaderboard()$username),
-                                     choices = unique(c(sort(Rnumerai::get_leaderboard()$username)
-                                                        # "joe_the_validator_01",
-                                                        # "joe_the_validator_02",
-                                                        # "joe_the_validator_03",
-                                                        # "joe_the_validator_04",
-                                                        # "joe_the_validator_05"
-                                                        # "joe_the_hedgehog_01",
-                                                        # "joe_the_hedgehog_02",
-                                                        # "joe_the_hedgehog_03",
-                                                        # "joe_the_hedgehog_04",
-                                                        # "joe_the_hedgehog_05"
-                                     )
-                                     ),
+                                     choices = sort(Rnumerai::get_leaderboard()$username),
                                      multiple = TRUE,
                                      width = "100%",
                                      options = list(
@@ -318,53 +308,8 @@ ui <- shinydashboardPlus::dashboardPage(
                 br(),
                 
                 tabsetPanel(type = "tabs",
-                            
-                            
-                            tabPanel("KPI (C&T)",
-                                     
-                                     br(),
-                                     
-                                     h3(strong(textOutput(outputId = "text_performance_models"))),
-                                     
-                                     h4(textOutput(outputId = "text_performance_models_note")),
-                                     
-                                     br(),
-                                     
-                                     fluidRow(
-                                       column(width = 6, plotlyOutput("plot_performance_avg")),
-                                       column(width = 6, plotlyOutput("plot_performance_sharpe"))
-                                     ),
-                                     
-                                     br(),
-                                     br(),
-                                     br(),
-                                     
-                                     fluidRow(DTOutput("dt_performance_summary"),
-                                              
-                                              br(),
-                                              
-                                              markdown("#### **Notes**:
-                                              
-                                              - **avg_corrV2**: Average `CORRv2`
-                                              - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
-                                              
-                                              - **avg_tc**: Average True Contribution (`TC`)
-                                              - **sharpe_tc**: Sharpe Ratio of True Contribution (`TC`)
-                                              
-                                              - **avg_2C1T**: Average `2xCORRv2 + 1xTC`
-                                              - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
-                                              
-                                              "),
-                                              
-                                              br()
-                                     ),
-                                     
-                                     
-                                     br()
-                                     
-                            ),
-                            
-                            # Coming soon
+
+                            # First Page - All KPIs
                             tabPanel("KPI (All)",
                                      
                                      br(),
@@ -383,7 +328,8 @@ ui <- shinydashboardPlus::dashboardPage(
                                               markdown("#### **Pick ONE of the KPIs:**"),
                                               pickerInput(
                                                 inputId = "kpi_choice",
-                                                choices = c("CORRv2: CORRelation with target cyrus_v4_20",
+                                                choices = c("MMCv2: The Latest and the Greatest MMC",
+                                                            "CORRv2: CORRelation with target cyrus_v4_20",
                                                             "TC: True Contribtuion to the hedge fund's returns",
                                                             "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
                                                             # "CORJ60: CORRelation with target Jerome_v4_60", # add this later
@@ -455,6 +401,50 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                             ),
                             
+                            
+                            tabPanel("KPI (C&T)",
+                                     
+                                     br(),
+                                     
+                                     h3(strong(textOutput(outputId = "text_performance_models"))),
+                                     
+                                     h4(textOutput(outputId = "text_performance_models_note")),
+                                     
+                                     br(),
+                                     
+                                     fluidRow(
+                                       column(width = 6, plotlyOutput("plot_performance_avg")),
+                                       column(width = 6, plotlyOutput("plot_performance_sharpe"))
+                                     ),
+                                     
+                                     br(),
+                                     br(),
+                                     br(),
+                                     
+                                     fluidRow(DTOutput("dt_performance_summary"),
+                                              
+                                              br(),
+                                              
+                                              markdown("#### **Notes**:
+                                              
+                                              - **avg_corrV2**: Average `CORRv2`
+                                              - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
+                                              
+                                              - **avg_tc**: Average True Contribution (`TC`)
+                                              - **sharpe_tc**: Sharpe Ratio of True Contribution (`TC`)
+                                              
+                                              - **avg_2C1T**: Average `2xCORRv2 + 1xTC`
+                                              - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
+                                              
+                                              "),
+                                              
+                                              br()
+                                     ),
+                                     
+                                     
+                                     br()
+                                     
+                            ),
                             
                             
                             tabPanel("Payout (Overview)",
@@ -672,6 +662,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.0** — Replaced `Payout Summary` with `Performance Summary`. Added KPIs summary
                 - #### **0.2.1** — Added `KPI (All)`
                 - #### **0.2.2** — Sped up chart rendering with `toWebGL()`
+                - #### **0.2.3** — Added new `MMC` - Ref: https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794/27
                 "),
               
               br(),
@@ -690,7 +681,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.2"))
+    right = paste0("Version 0.2.3"))
   
 )
 
@@ -786,9 +777,9 @@ server <- function(input, output) {
     ) |>
       
       # Reformat individual columns
-      formatRound(columns = c("corrV2", "tc", "fncV3", "corr_meta", "pay_ftr"), digits = 4) |>
+      formatRound(columns = c("corrV2", "tc", "fncV3", "corr_meta", "pay_ftr", "mmc"), digits = 4) |>
       formatRound(columns = c("apcwnm", "mcwnm"), digits = 4) |>
-      formatRound(columns = c("corrV2_pct", "tc_pct", "fncV3_pct"), digits = 1) |>
+      formatRound(columns = c("corrV2_pct", "tc_pct", "fncV3_pct", "mmc_pct"), digits = 1) |>
       formatRound(columns = c("stake", "payout"), digits = 2) |>
       
       formatStyle(columns = c("model"),
@@ -798,13 +789,13 @@ server <- function(input, output) {
                   fontWeight = "bold",
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "#2196F3"))) |>
       
-      formatStyle(columns = c("corrV2", "fncV3"),
+      formatStyle(columns = c("corrV2", "fncV3", "mmc"),
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "black"))) |>
       
       formatStyle(columns = c("tc"),
                   color = styleInterval(cuts = -1e-15, values = c("#D24141", "#A278DC"))) |>
       
-      formatStyle(columns = c("corrV2_pct", "tc_pct", "fncV3_pct"),
+      formatStyle(columns = c("corrV2_pct", "tc_pct", "fncV3_pct", "mmc_pct"),
                   color = styleInterval(cuts = c(1, 5, 15, 85, 95, 99), 
                                         values = c("#692020", "#9A2F2F", "#D24141", 
                                                    "#D1D1D1", # light grey
@@ -1056,6 +1047,7 @@ server <- function(input, output) {
       d_pref[stake >0, rate_of_return := payout / stake * 100]
       
       # Extract Raw KPI
+      if (input$kpi_choice == "MMCv2: The Latest and the Greatest MMC") d_pref[, KPI := mmc]
       if (input$kpi_choice == "CORRv2: CORRelation with target cyrus_v4_20") d_pref[, KPI := corrV2]
       if (input$kpi_choice == "TC: True Contribtuion to the hedge fund's returns") d_pref[, KPI := tc]
       if (input$kpi_choice == "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features") d_pref[, KPI := fncV3]
@@ -1544,6 +1536,7 @@ server <- function(input, output) {
     d_kpi <- react_d_kpi()
     
     # Dynamic Labels
+    if (input$kpi_choice == "MMCv2: The Latest and the Greatest MMC") y_label <- "mmc"
     if (input$kpi_choice == "CORRv2: CORRelation with target cyrus_v4_20") y_label <- "CORRv2"
     if (input$kpi_choice == "TC: True Contribtuion to the hedge fund's returns") y_label <- "TC"
     if (input$kpi_choice == "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features") y_label <- "FNCv3"
