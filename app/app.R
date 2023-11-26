@@ -21,6 +21,12 @@ library(parallel)
 library(Rnumerai)
 
 
+# Options
+options(datatable.showProgress = FALSE)
+options(timeout = 100000000)
+options(encoding = "UTF-8")
+
+
 # ==============================================================================
 # Helper Functions
 # ==============================================================================
