@@ -543,7 +543,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                               - **1C0T**: 1xCORRv2 + 0xTC (Until the End of 2023)
                                               - **2C0T**: 2xCORRv2 + 0xTC (Until the End of 2023)
                                               - **2C1T**: 2xCORRv2 + 1xTC (Until the End of 2023)
-                                              - **2MMC**: 1xMMCv2 (Upcoming Payout Mode) - See https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794
+                                              - **2MMC**: 2xMMCv2 (**New Payout Mode**) - See https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794
                                               
 
                                               "),
