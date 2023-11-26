@@ -21,6 +21,10 @@ library(parallel)
 library(Rnumerai)
 
 
+# Options
+options(encoding = "UTF-8")
+
+
 # Pre-download all usernames
 options(timeout = max(1000, getOption("timeout")))
 ls_username <- sort(get_leaderboard()$username)
