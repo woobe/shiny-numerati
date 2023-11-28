@@ -355,8 +355,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                                             "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
                                                             "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR",
                                                             
-                                                            
-                                                            "Score Multipliers: 2.0 x MMCv2",
+                                                            "Score Multipliers: 0.5 x CORRv2 + 2.0 x MMCv2",
                                                             "Score Multipliers: 0.5 x CORRv2",
                                                             "Score Multipliers: 1.5 x CORRv2",
                                                             "Score Multipliers: 2.0 x CORRv2",
@@ -418,7 +417,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                      br()
                                      
                             ),
-                            
+
                             
                             tabPanel("KPI (C&T)",
                                      
@@ -553,7 +552,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                               - **1C0T**: 1xCORRv2 + 0xTC (Until the End of 2023)
                                               - **2C0T**: 2xCORRv2 + 0xTC (Until the End of 2023)
                                               - **2C1T**: 2xCORRv2 + 1xTC (Until the End of 2023)
-                                              - **2MMC**: 2xMMCv2 (**New Payout Mode**) - See https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794
+                                              - **05C2M**: 0.5xCORRv2 + 2xMMCv2 (**New Payout Mode**)
                                               
 
                                               "),
@@ -603,6 +602,124 @@ ui <- shinydashboardPlus::dashboardPage(
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual")),
                                      
                                      br()
+                            ),
+                            
+                            
+                            tabPanel("KPI (x~y)",
+                                     
+                                     br(),
+                                     
+                                     h3("**Coming Soon!**"),
+                                     
+                                     # h3(strong(textOutput(outputId = "text_performance_models"))),
+                                     
+                                     # h4(textOutput(outputId = "text_performance_models_note")),
+                                     
+                                     br(),
+                                     
+                                     # Controls ============================================================================
+                                     
+                                     fluidRow(
+                                       
+                                       column(6, 
+                                              markdown("#### **X-Axis:**"),
+                                              pickerInput(
+                                                inputId = "kpi_xy_x",
+                                                choices = c("CORRv2: CORRelation with target cyrus_v4_20",
+                                                            "MMCv2: The Latest and the Greatest MMC",
+                                                            "TC: True Contribtuion to the hedge fund's returns",
+                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
+                                                            "Percentile: MMCv2",
+                                                            "Percentile: CORRv2",
+                                                            "Percentile: TC",
+                                                            "Percentile: FNCv3",
+                                                            "CWMM: Correlation With the Meta Model",
+                                                            "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
+                                                            "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR"),
+                                                
+                                                multiple = FALSE,
+                                                width = "95%")
+                                       ),
+                                       
+                                       column(6, 
+                                              markdown("#### **Y-Axis:**"),
+                                              pickerInput(
+                                                inputId = "kpi_xy_y",
+                                                choices = c("MMCv2: The Latest and the Greatest MMC",
+                                                            "CORRv2: CORRelation with target cyrus_v4_20",
+                                                            "TC: True Contribtuion to the hedge fund's returns",
+                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
+                                                            "Percentile: MMCv2",
+                                                            "Percentile: CORRv2",
+                                                            "Percentile: TC",
+                                                            "Percentile: FNCv3",
+                                                            "CWMM: Correlation With the Meta Model",
+                                                            "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
+                                                            "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR"),
+                                                
+                                                multiple = FALSE,
+                                                width = "95%")
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Control 1**"),
+                                              switchInput(
+                                                inputId = "kpi_xy_ctrl_1",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = TRUE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Control 2**"),
+                                              switchInput(
+                                                inputId = "kpi_xy_ctrl_2",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Control 3**"),
+                                              switchInput(
+                                                inputId = "kpi_xy_ctrl_3",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Control 4**"),
+                                              switchInput(
+                                                inputId = "kpi_xy_ctrl_4",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Control 5**"),
+                                              switchInput(
+                                                inputId = "kpi_xy_ctrl_5",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       ),
+                                       
+                                       column(2,
+                                              markdown("#### **Control 6**"),
+                                              switchInput(
+                                                inputId = "kpi_xy_ctrl_6",
+                                                onLabel = "Yes",
+                                                offLabel = "No",
+                                                value = FALSE)
+                                       )
+                                       
+                                       
+                                     ),
+                                     
+                                     br()
+                                     
                             )
                             
                 ) # end of tabsetPanel
@@ -686,7 +803,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.2** — Sped up chart rendering with `toWebGL()`
                 - #### **0.2.3** — Added new `MMC` - Ref: https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794/27
                 - #### **0.2.4** — Added `MMC` to `Payout Sim`
-                - #### **0.2.5** — Added more KPI charts and tables
+                - #### **0.2.5** — Added more features related to MMC
                 "),
               
               br(),
@@ -938,7 +1055,7 @@ server <- function(input, output) {
       d_payout[, payout_2C0T := (2*corrV2_final) * stake * pay_ftr]
       d_payout[, payout_2C1T := (2*corrV2_final + tc_final) * stake * pay_ftr]
       d_payout[, payout_1C3T := (corrV2_final + 3*tc_final) * stake * pay_ftr]
-      d_payout[, payout_2MMC := (2*mmc) * stake * pay_ftr]
+      d_payout[, payout_05C2M := (0.5*corrV2_final + 2*mmc) * stake * pay_ftr]
       
       # Summarise
       d_payout_smry <-
@@ -952,13 +1069,13 @@ server <- function(input, output) {
           sum_pay_2C0T = sum(payout_2C0T, na.rm = T),
           sum_pay_2C1T = sum(payout_2C1T, na.rm = T),
           sum_pay_1C3T = sum(payout_1C3T, na.rm = T),
-          sum_pay_2MMC = sum(payout_2MMC, na.rm = T),
+          sum_pay_05C2M = sum(payout_05C2M, na.rm = T),
           
           shp_pay_1C0T = mean(payout_1C0T, na.rm = T) / sd(payout_1C0T, na.rm = T),
           shp_pay_2C0T = mean(payout_2C0T, na.rm = T) / sd(payout_2C0T, na.rm = T),
           shp_pay_2C1T = mean(payout_2C1T, na.rm = T) / sd(payout_2C1T, na.rm = T),
           shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T),
-          shp_pay_2MMC = mean(payout_2MMC, na.rm = T) / sd(payout_2MMC, na.rm = T)
+          shp_pay_05C2M = mean(payout_05C2M, na.rm = T) / sd(payout_05C2M, na.rm = T)
           
         ) |>
         as.data.table()
@@ -997,7 +1114,7 @@ server <- function(input, output) {
       d_payout[, payout_2C0T := (2*corrV2_final) * stake * pay_ftr]
       d_payout[, payout_2C1T := (2*corrV2_final + tc_final) * stake * pay_ftr]
       d_payout[, payout_1C3T := (corrV2_final + 3*tc_final) * stake * pay_ftr]
-      d_payout[, payout_2MMC := (2*mmc) * stake * pay_ftr]
+      d_payout[, payout_05C2M := (0.5*corrV2 + 2*mmc) * stake * pay_ftr]
       
       # Summarise
       d_payout_smry <-
@@ -1009,13 +1126,13 @@ server <- function(input, output) {
           sum_pay_2C0T = sum(payout_2C0T, na.rm = T),
           sum_pay_2C1T = sum(payout_2C1T, na.rm = T),
           sum_pay_1C3T = sum(payout_1C3T, na.rm = T),
-          sum_pay_2MMC = sum(payout_2MMC, na.rm = T),
+          sum_pay_05C2M = sum(payout_05C2M, na.rm = T),
           
           shp_pay_1C0T = mean(payout_1C0T, na.rm = T) / sd(payout_1C0T, na.rm = T),
           shp_pay_2C0T = mean(payout_2C0T, na.rm = T) / sd(payout_2C0T, na.rm = T),
           shp_pay_2C1T = mean(payout_2C1T, na.rm = T) / sd(payout_2C1T, na.rm = T),
           shp_pay_1C3T = mean(payout_1C3T, na.rm = T) / sd(payout_1C3T, na.rm = T),
-          shp_pay_2MMC = mean(payout_2MMC, na.rm = T) / sd(payout_2MMC, na.rm = T)
+          shp_pay_05C2M = mean(payout_05C2M, na.rm = T) / sd(payout_05C2M, na.rm = T)
           
         ) |>
         as.data.table()
@@ -1086,7 +1203,7 @@ server <- function(input, output) {
       if (input$kpi_choice == "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR") d_pref[, KPI := apcwnm]
       
       # Calculate Score Multiplies
-      if (input$kpi_choice == "Score Multipliers: 2.0 x MMCv2") d_pref[, KPI := 2.0 * mmc]
+      if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2 + 2.0 x MMCv2") d_pref[, KPI := 0.5 * corrV2 + 2.0 * mmc]
       if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2") d_pref[, KPI := 0.5 * corrV2]
       if (input$kpi_choice == "Score Multipliers: 1.5 x CORRv2") d_pref[, KPI := 1.5 * corrV2]
       if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2") d_pref[, KPI := 2.0 * corrV2]
@@ -1576,7 +1693,7 @@ server <- function(input, output) {
     if (input$kpi_choice == "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR") y_label <- "MCWNM"
     if (input$kpi_choice == "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR") y_label <- "APCWNM"
     
-    if (input$kpi_choice == "Score Multipliers: 2.0 x MMCv2") y_label <- "2.0 x MMCv2"
+    if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2 + 2.0 x MMCv2") y_label <- "0.5 x CORRv2 + 2.0 x MMCv2"
     if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2") y_label <- "0.5 x CORRv2"
     if (input$kpi_choice == "Score Multipliers: 1.5 x CORRv2") y_label <- "1.5 x CORRv2"
     if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2") y_label <- "2.0 x CORRv2"
@@ -1773,18 +1890,18 @@ server <- function(input, output) {
       
       # Reformat individual columns
       formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
-                              "sum_pay_2MMC", "shp_pay_2MMC",
+                              "sum_pay_05C2M", "shp_pay_05C2M",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   digits = 2) |>
       
       formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
-                              "sum_pay_2MMC", "shp_pay_2MMC",
+                              "sum_pay_05C2M", "shp_pay_05C2M",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   color = styleInterval(cuts = c(-1e-15, 1e-15),
                                         values = c("#D24141", "#D1D1D1", "#00A800"))) |>
       
       formatStyle(columns = c("model", 
-                              "sum_pay_2MMC", "shp_pay_2MMC"
+                              "sum_pay_05C2M", "shp_pay_05C2M"
                               # "sum_pay_2C1T", "sum_pay_1C3T",
                               # "shp_pay_2C1T", "shp_pay_1C3T"
       ), fontWeight = "bold")
@@ -1816,17 +1933,17 @@ server <- function(input, output) {
       
       # Reformat individual columns
       formatRound(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
-                              "sum_pay_2MMC", "shp_pay_2MMC",
+                              "sum_pay_05C2M", "shp_pay_05C2M",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   digits = 2) |>
       
       formatStyle(columns = c("sum_pay_1C0T", "sum_pay_2C0T", "sum_pay_2C1T", "sum_pay_1C3T",
-                              "sum_pay_2MMC", "shp_pay_2MMC",
+                              "sum_pay_05C2M", "shp_pay_05C2M",
                               "shp_pay_1C0T", "shp_pay_2C0T", "shp_pay_2C1T", "shp_pay_1C3T"),
                   color = styleInterval(cuts = c(-1e-15, 1e-15),
                                         values = c("#D24141", "#D1D1D1", "#00A800"))) |>
       
-      formatStyle(columns = c("sum_pay_2MMC", "shp_pay_2MMC"),
+      formatStyle(columns = c("sum_pay_05C2M", "shp_pay_05C2M"),
                   fontWeight = "bold")
     
   })
