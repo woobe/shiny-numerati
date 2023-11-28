@@ -1795,8 +1795,8 @@ server <- function(input, output) {
           dom = 'Bflrtip', # https://datatables.net/reference/option/dom
           buttons = list('csv', 'excel', 'copy', 'print'), # https://rstudio.github.io/DT/003-tabletools-buttons.html
           order = list(list(0, 'asc'), list(1, 'asc')),
-          pageLength = 100,
-          lengthMenu = c(10, 50, 100, 500, 1000),
+          pageLength = 1000,
+          lengthMenu = c(10, 50, 100, 500, 1000, 10000),
           columnDefs = list(list(className = 'dt-center', targets = "_all")))
     ) |>
       
