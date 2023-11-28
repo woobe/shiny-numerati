@@ -346,20 +346,26 @@ ui <- shinydashboardPlus::dashboardPage(
                                                             "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
                                                             # "CORJ60: CORRelation with target Jerome_v4_60", # add this later
                                                             
+                                                            "Percentile: MMCv2",
+                                                            "Percentile: CORRv2",
+                                                            "Percentile: TC",
+                                                            "Percentile: FNCv3",
+                                                            
                                                             "CWMM: Correlation With the Meta Model",
                                                             "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
                                                             "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR",
                                                             
+                                                            
+                                                            "Score Multipliers: 2.0 x MMCv2",
                                                             "Score Multipliers: 0.5 x CORRv2",
                                                             "Score Multipliers: 1.5 x CORRv2",
                                                             "Score Multipliers: 2.0 x CORRv2",
                                                             "Score Multipliers: 2.0 x CORRv2 + 0.5 x TC",
                                                             "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC",
                                                             
-                                                            "Percentile: CORRv2",
-                                                            "Percentile: TC",
-                                                            "Percentile: FNCv3",
                                                             
+                                                            
+
                                                             "Payout",
                                                             "Rate of Return (%): Payout / Stake x 100"),
                                                 multiple = FALSE,
@@ -680,6 +686,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.2** — Sped up chart rendering with `toWebGL()`
                 - #### **0.2.3** — Added new `MMC` - Ref: https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794/27
                 - #### **0.2.4** — Added `MMC` to `Payout Sim`
+                - #### **0.2.5** — Added more KPI charts and tables
                 "),
               
               br(),
@@ -698,7 +705,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.4"))
+    right = paste0("Version 0.2.5"))
   
 )
 
@@ -1079,6 +1086,7 @@ server <- function(input, output) {
       if (input$kpi_choice == "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR") d_pref[, KPI := apcwnm]
       
       # Calculate Score Multiplies
+      if (input$kpi_choice == "Score Multipliers: 2.0 x MMCv2") d_pref[, KPI := 2.0 * mmc]
       if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2") d_pref[, KPI := 0.5 * corrV2]
       if (input$kpi_choice == "Score Multipliers: 1.5 x CORRv2") d_pref[, KPI := 1.5 * corrV2]
       if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2") d_pref[, KPI := 2.0 * corrV2]
@@ -1086,6 +1094,7 @@ server <- function(input, output) {
       if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC") d_pref[, KPI := 2.0 * corrV2 + 1.0 * tc]
       
       # Extract Percentile
+      if (input$kpi_choice == "Percentile: MMCv2") d_pref[, KPI := mmc_pct]
       if (input$kpi_choice == "Percentile: CORRv2") d_pref[, KPI := corrV2_pct]
       if (input$kpi_choice == "Percentile: TC") d_pref[, KPI := tc_pct]
       if (input$kpi_choice == "Percentile: FNCv3") d_pref[, KPI := fncV3_pct]
@@ -1567,12 +1576,14 @@ server <- function(input, output) {
     if (input$kpi_choice == "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR") y_label <- "MCWNM"
     if (input$kpi_choice == "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR") y_label <- "APCWNM"
     
+    if (input$kpi_choice == "Score Multipliers: 2.0 x MMCv2") y_label <- "2.0 x MMCv2"
     if (input$kpi_choice == "Score Multipliers: 0.5 x CORRv2") y_label <- "0.5 x CORRv2"
     if (input$kpi_choice == "Score Multipliers: 1.5 x CORRv2") y_label <- "1.5 x CORRv2"
     if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2") y_label <- "2.0 x CORRv2"
     if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 0.5 x TC") y_label <- "2.0 x CORRv2 + 0.5 x TC"
     if (input$kpi_choice == "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC") y_label <- "2.0 x CORRv2 + 1.0 x TC"
     
+    if (input$kpi_choice == "Percentile: MMCv2") y_label <- "MMCv2 Percentile"
     if (input$kpi_choice == "Percentile: CORRv2") y_label <- "CORRv2 Percentile"
     if (input$kpi_choice == "Percentile: TC") y_label <- "TC Percentile"
     if (input$kpi_choice == "Percentile: FNCv3") y_label <- "FNCv3 Percentile"
