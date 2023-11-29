@@ -30,6 +30,31 @@ options(timeout = max(1000, getOption("timeout")))
 ls_username <- sort(get_leaderboard()$username)
 
 
+# Prepare survey results data
+if (TRUE) {
+  
+  # Download
+  gs4_deauth()
+  d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
+                             sheet = "Form responses 1") %>% data.table()
+  
+  # Rename
+  colnames(d_survey_raw) <- c("timestamp", "country", "comments")
+  
+  # Summarise
+  d_survey_summary <- 
+    d_survey_raw %>% 
+    group_by(country) %>% 
+    summarise(count = n()) %>%
+    arrange(desc(count), country) %>%
+    as.data.table()
+  
+}
+
+
+
+
+
 
 # ==============================================================================
 # Helper Functions
@@ -1030,20 +1055,6 @@ server <- function(input, output) {
   
   output$dt_survey_summary <- DT::renderDT({
     
-    # Get Raw Data
-    gs4_deauth()
-    d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
-                               sheet = "Form responses 1") %>% data.table()
-    colnames(d_survey_raw) <- c("timestamp", "country", "comments")
-
-    # Summarise
-    d_survey_summary <- 
-      d_survey_raw %>% 
-      group_by(country) %>% 
-      summarise(count = n()) %>%
-      arrange(desc(count), country) %>%
-      as.data.table()
-
     # Return
     DT::datatable(
       
@@ -1068,12 +1079,6 @@ server <- function(input, output) {
   
   
   output$dt_survey_raw <- DT::renderDT({
-    
-    # Get Raw Data
-    gs4_deauth()
-    d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
-                               sheet = "Form responses 1") %>% data.table()
-    colnames(d_survey_raw) <- c("timestamp", "country", "comments")
     
     # Return
     DT::datatable(
