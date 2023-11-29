@@ -54,9 +54,6 @@ if (TRUE) {
 
 
 
-
-
-
 # ==============================================================================
 # Helper Functions
 # ==============================================================================
@@ -636,12 +633,8 @@ ui <- shinydashboardPlus::dashboardPage(
                                      
                                      br(),
                                      
-                                     h3("**Coming Soon!**"),
-                                     
-                                     # h3(strong(textOutput(outputId = "text_performance_models"))),
-                                     
-                                     # h4(textOutput(outputId = "text_performance_models_note")),
-                                     
+                                     markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)"),
+
                                      br(),
                                      
                                      # Controls ============================================================================
