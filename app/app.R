@@ -30,15 +30,6 @@ options(timeout = max(1000, getOption("timeout")))
 ls_username <- sort(get_leaderboard()$username)
 
 
-# Pre-download Survey Results
-gs4_deauth()
-d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
-                           sheet = "Form responses 1") %>% data.table()
-colnames(d_survey_raw) <- c("timestamp", "country", "comments")
-
-
-
-
 
 # ==============================================================================
 # Helper Functions
@@ -1039,6 +1030,11 @@ server <- function(input, output) {
   
   output$dt_survey_summary <- DT::renderDT({
     
+    # Get Raw Data
+    gs4_deauth()
+    d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
+                               sheet = "Form responses 1") %>% data.table()
+    colnames(d_survey_raw) <- c("timestamp", "country", "comments")
 
     # Summarise
     d_survey_summary <- 
@@ -1072,26 +1068,31 @@ server <- function(input, output) {
   
   
   output$dt_survey_raw <- DT::renderDT({
-
-      # Return
-      # Return
-      DT::datatable(
-        
-        # Data
-        d_survey_raw,
-        
-        # Other Options
-        rownames = FALSE,
-        # extensions = "Buttons",
-        options =
-          list(
-            dom = 'Blrtip', # https://datatables.net/reference/option/dom
-            pageLength = 20,
-            lengthMenu = c(10, 20, 100, 500)
-          )
-      )
+    
+    # Get Raw Data
+    gs4_deauth()
+    d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
+                               sheet = "Form responses 1") %>% data.table()
+    colnames(d_survey_raw) <- c("timestamp", "country", "comments")
+    
+    # Return
+    DT::datatable(
       
-    })
+      # Data
+      d_survey_raw,
+      
+      # Other Options
+      rownames = FALSE,
+      # extensions = "Buttons",
+      options =
+        list(
+          dom = 'Blrtip', # https://datatables.net/reference/option/dom
+          pageLength = 20,
+          lengthMenu = c(10, 20, 100, 500)
+        )
+    )
+    
+  })
   
   
   
