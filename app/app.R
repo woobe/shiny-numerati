@@ -44,6 +44,7 @@ if (TRUE) {
   # Summarise
   d_survey_summary <- 
     d_survey_raw %>% 
+    lazy_dt() %>%
     group_by(country) %>% 
     summarise(count = n()) %>%
     arrange(desc(count), country) %>%
