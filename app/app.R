@@ -14,8 +14,8 @@ library(wesanderson)
 
 library(data.table)
 library(dtplyr)
-
 library(parallel)
+library(googlesheets4)
 
 # devtools::install_github("woobe/Rnumerai")
 library(Rnumerai)
@@ -28,6 +28,16 @@ options(encoding = "UTF-8")
 # Pre-download all usernames
 options(timeout = max(1000, getOption("timeout")))
 ls_username <- sort(get_leaderboard()$username)
+
+
+# Pre-download Survey Results
+gs4_deauth()
+d_survey_raw <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/18AM4RkG5KiK3TlDGMx0z7X5Y5-eQE9kgLXM9ng_yXUk",
+                           sheet = "Form responses 1") %>% data.table()
+colnames(d_survey_raw) <- c("timestamp", "country", "comments")
+
+
+
 
 
 # ==============================================================================
@@ -756,12 +766,105 @@ ui <- shinydashboardPlus::dashboardPage(
       # ========================================================================
       
       tabItem(tabName = "community",
-              fluidRow(
-                column(10,
-                       htmltools::includeMarkdown('https://raw.githubusercontent.com/councilofelders/meetups/master/README.md')
-                )
-              )
-              # markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
+              
+              fluidPage(
+                
+                markdown("# **Numerai Coummunity**"),
+                br(),
+                
+                tabsetPanel(type = "tabs",
+                            
+                            # First Page - About
+                            tabPanel("About",
+                                     markdown("## **Around the World with Numeratis**"),
+                                     
+                                     markdown("### **Overview**
+                                     
+                                              NumerCon (2022) and the time I spent with my fellow Numeratis were the exact “booster jab” I needed to wake the “meetup organizer Joe” up 
+                                              after two crazy years of COVID and hibernation in a man cave. After NumerCon, I am confident that 
+                                              1) many countries are now ready for in-person tech events and 
+                                              2) we need to bring this fantastic in-person experience to more Numeratis around the world.
+                                              
+                                              So, fam, here is my [proposal](https://forum.numer.ai/t/proposal-around-the-world-with-numeratis) for **Global Numerai Community Meetups**.
+                                              
+                                              "),
+                                     
+                                     
+                                     markdown("### **Goals**
+                                              - **Demystifying Numerai** - many top data scientists out there are just not too sure about the crypto elements and/or the tournament format. Speaking with and listening to long-term participants can be an effective way to build trust. This was exactly how I learned to trust Numerai after watching Jon’s Office Hours with Arbitrage.
+                                              - **Knowledge sharing and brainstorming** - although we may not share all our secret sauce, meetups are great opportunities to bounce ideas off each other and may lead to new models with crazily high TC.
+                                              - **Face-to-face discussions between Numeratis and Numerai team** - a lot more than just asking the team “wen scores” in person, these events can provide a quick and direct feedback loop for both participants and the Numerai team.
+                                              "),
+                                     
+                                     markdown("### **What's Here?**
+                                              
+                                              - Materials (slides and videos) from previous events
+                                              - Survey results for upcoming events
+                                              - Memes and (de)GenAI stuff from the community
+                                              
+                                              ### **Enjoy :)**
+                                              
+                                              ")
+
+                                     
+                            ),
+                            
+                            # Second Page - Materials
+                            tabPanel("Materials", 
+                                     fluidRow(
+                                       column(10,
+                                              htmltools::includeMarkdown('https://raw.githubusercontent.com/councilofelders/meetups/master/README.md')
+                                              ))
+                            ),
+                            
+                            
+                            # Third Page - Survey Results
+                            tabPanel("Survey Results",
+                                     
+                                     markdown("## **Survey for Upcoming Events**"),
+                                     
+                                     br(),
+                                     
+                                     markdown("Hello everyone! 
+                                              
+                                              We’re reaching out to gather **anonymous data** on your location, which will greatly assist us in planning future Numerai community events.
+                                                
+                                              Your support in providing this information would be much appreciated. 
+                                                
+                                              You can find the latest survey results below.
+                                                
+                                              Here is the [**Google Form**](https://forms.gle/1USUa7YCn2EgZG3NA). Please share it with your fellow Numeratis. 
+                                                
+                                              Thank you!
+                                       
+                                                "),
+                                     
+                                     fluidRow(
+
+                                       column(4, 
+                                              markdown("### **Summary**"),
+                                              br(),
+                                              DTOutput("dt_survey_summary")
+                                       ),
+                                       
+                                       column(8,
+                                              markdown("### **Raw Data**"),
+                                              br(),
+                                              DTOutput("dt_survey_raw"))
+                                       )
+                                     ),
+                            
+                            
+                            # 4th Page - Memes
+                            tabPanel("Memes",
+                                     markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)")
+                            )
+
+                            
+                            
+                ) # end of tabsetPanel
+              ) # end of fluidPage
+
       ),
       
       
@@ -801,9 +904,10 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.0** — Replaced `Payout Summary` with `Performance Summary`. Added KPIs summary
                 - #### **0.2.1** — Added `KPI (All)`
                 - #### **0.2.2** — Sped up chart rendering with `toWebGL()`
-                - #### **0.2.3** — Added new `MMC` - Ref: https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only/6794/27
+                - #### **0.2.3** — Added new `MMC` - Ref: https://forum.numer.ai/t/changing-scoring-payouts-again-to-mmc-only
                 - #### **0.2.4** — Added `MMC` to `Payout Sim`
                 - #### **0.2.5** — Added more features related to MMC
+                - #### **0.2.6** — Added survey results - Ref: https://forum.numer.ai/t/around-the-world-with-numeratis-survey-for-upcoming-events
                 "),
               
               br(),
@@ -822,7 +926,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.5"))
+    right = paste0("Version 0.2.6"))
   
 )
 
@@ -850,23 +954,6 @@ server <- function(input, output) {
   
   react_ls_model <- eventReactive(input$button_download, {sort(input$model)})
   
-  output$print_download <- renderPrint({react_ls_model()})
-  
-  output$text_download <- renderText({
-    if (length(react_ls_model()) >= 1) "Your Selection:" else " "
-  })
-  
-  output$text_preview <- renderText({
-    if (length(react_ls_model()) >= 1) "Data Preview:" else " "
-  })
-  
-  output$text_next <- renderText({
-    if (length(react_ls_model()) >= 1) "Step 3: Performance Summary (see ←)" else " "
-  })
-  
-  output$text_note <- renderText({
-    if (length(react_ls_model()) >= 1) "Note: you can also download [Raw Data] and check out our [Community Events] (see ←)" else " "
-  })
   
   react_d_raw <- eventReactive(
     input$button_download,
@@ -882,12 +969,6 @@ server <- function(input, output) {
       
     }
   )
-  
-  
-  
-  # ============================================================================
-  # Reactive: DataTable
-  # ============================================================================
   
   
   output$dt_model <- DT::renderDT({
@@ -950,6 +1031,94 @@ server <- function(input, output) {
   })
   
   
+  
+  # ============================================================================
+  # Static: Survey Data
+  # ============================================================================
+  
+  
+  output$dt_survey_summary <- DT::renderDT({
+    
+
+    # Summarise
+    d_survey_summary <- 
+      d_survey_raw %>% 
+      group_by(country) %>% 
+      summarise(count = n()) %>%
+      arrange(desc(count), country) %>%
+      as.data.table()
+
+    # Return
+    DT::datatable(
+      
+      # Data
+      d_survey_summary,
+      
+      # Other Options
+      rownames = FALSE,
+      # extensions = "Buttons",
+      options =
+        list(
+          dom = 'Blrtip', # https://datatables.net/reference/option/dom
+          pageLength = 20,
+          lengthMenu = c(10, 20, 100, 500)
+        )
+    )
+                  
+    
+  })
+  
+  
+  
+  
+  output$dt_survey_raw <- DT::renderDT({
+
+      # Return
+      # Return
+      DT::datatable(
+        
+        # Data
+        d_survey_raw,
+        
+        # Other Options
+        rownames = FALSE,
+        # extensions = "Buttons",
+        options =
+          list(
+            dom = 'Blrtip', # https://datatables.net/reference/option/dom
+            pageLength = 20,
+            lengthMenu = c(10, 20, 100, 500)
+          )
+      )
+      
+    })
+  
+  
+  
+  # ============================================================================
+  # Reactive: Text Printout
+  # ============================================================================
+  
+  output$print_download <- renderPrint({react_ls_model()})
+  
+  
+  output$text_download <- renderText({
+    if (length(react_ls_model()) >= 1) "Your Selection:" else " "
+  })
+  
+  output$text_preview <- renderText({
+    if (length(react_ls_model()) >= 1) "Data Preview:" else " "
+  })
+  
+  output$text_next <- renderText({
+    if (length(react_ls_model()) >= 1) "Step 3: Performance Summary (see ←)" else " "
+  })
+  
+  output$text_note <- renderText({
+    if (length(react_ls_model()) >= 1) "Note: you can also download [Raw Data] and check out our [Community Events] (see ←)" else " "
+  })
+  
+
   
   # ============================================================================
   # Reactive: filtering data for all charts
