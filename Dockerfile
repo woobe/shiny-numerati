@@ -4,7 +4,7 @@ FROM rocker/r-ver:4.2.3
 RUN R -q -e "install.packages(c('remotes'))"
 
 # Specific version of Shiny
-RUN R -q -e "remotes::install_version('shiny', version = '1.7.5.1', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('shiny', version = '1.8.0', repos = 'http://cran.us.r-project.org')"
 
 # basic shiny functionality
 RUN R -q -e "install.packages(c('rmarkdown', 'markdown'))"
