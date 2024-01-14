@@ -240,7 +240,7 @@ ui <- shinydashboardPlus::dashboardPage(
                          
                          pickerInput(inputId = "model",
                                      label = " ",
-                                     choices = ls_username,
+                                     choices = ls_username, # Replace this with your own models if needed
                                      multiple = TRUE,
                                      width = "100%",
                                      options = list(
@@ -249,7 +249,7 @@ ui <- shinydashboardPlus::dashboardPage(
                                        size = 20,
                                        `actions-box` = TRUE,
                                        `live-search` = TRUE,
-                                       `live-search-placeholder` = "For example, try  lgbm_v4  or  integration_test",
+                                       `live-search-placeholder` = "For example: V43_LGBM_CYRUS20",
                                        `virtual-scroll` = TRUE,
                                        `multiple-separator` = ", ",
                                        `selected-text-format`= "count > 3",
@@ -554,52 +554,52 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout (Sim)",
-                                     
-                                     br(),
-                                     
-                                     h3(strong(textOutput(outputId = "text_payout_sim"))),
-                                     
-                                     br(),
-                                     
-                                     # markdown("![new_tc_change](https://i.ibb.co/XjKwtzr/screenshot-2023-10-05-at-10.png)"),
-                                     markdown("![new_mmc](https://forum.numer.ai/uploads/default/optimized/2X/0/0b04785bd7167ff261f26325bc926c107398e26a_2_1035x729.jpeg)"),
-                                     
-                                     
-                                     br(),
-                                     
-                                     markdown("#### **Notes**:
-                                              
-                                              - **sum_pay**: Sum of Payouts
-                                              - **shp_pay**: Sharpe Ratio of Payouts
-                                              - **1C3T**: 1xCORRv2 + 3xTC (Original Degen Mode)
-                                              - **1C0T**: 1xCORRv2 + 0xTC (Until the End of 2023)
-                                              - **2C0T**: 2xCORRv2 + 0xTC (Until the End of 2023)
-                                              - **2C1T**: 2xCORRv2 + 1xTC (Until the End of 2023)
-                                              - **05C2M**: 0.5xCORRv2 + 2xMMCv2 (**New Payout Mode**)
-                                              
-
-                                              "),
-                                     
-                                     br(),
-                                     
-                                     markdown("### **Payout Simulation (Overall)**"),
-                                     
-                                     DTOutput("dt_payout_sim_overall"),
-                                     
-                                     br(),
-                                     
-                                     br(),
-                                     
-                                     markdown("### **Payout Simulation (Individual Models)**"),
-                                     
-                                     br(),
-                                     
-                                     DTOutput("dt_payout_sim_model"),
-                                     
-                                     br()
-                                     
-                            ),
+                            # tabPanel("Payout (Sim)",
+                            #          
+                            #          br(),
+                            #          
+                            #          h3(strong(textOutput(outputId = "text_payout_sim"))),
+                            #          
+                            #          br(),
+                            #          
+                            #          # markdown("![new_tc_change](https://i.ibb.co/XjKwtzr/screenshot-2023-10-05-at-10.png)"),
+                            #          markdown("![new_mmc](https://forum.numer.ai/uploads/default/optimized/2X/0/0b04785bd7167ff261f26325bc926c107398e26a_2_1035x729.jpeg)"),
+                            #          
+                            #          
+                            #          br(),
+                            #          
+                            #          markdown("#### **Notes**:
+                            #                   
+                            #                   - **sum_pay**: Sum of Payouts
+                            #                   - **shp_pay**: Sharpe Ratio of Payouts
+                            #                   - **1C3T**: 1xCORRv2 + 3xTC (Original Degen Mode)
+                            #                   - **1C0T**: 1xCORRv2 + 0xTC (Until the End of 2023)
+                            #                   - **2C0T**: 2xCORRv2 + 0xTC (Until the End of 2023)
+                            #                   - **2C1T**: 2xCORRv2 + 1xTC (Until the End of 2023)
+                            #                   - **05C2M**: 0.5xCORRv2 + 2xMMCv2 (**New Payout Mode**)
+                            #                   
+                            # 
+                            #                   "),
+                            #          
+                            #          br(),
+                            #          
+                            #          markdown("### **Payout Simulation (Overall)**"),
+                            #          
+                            #          DTOutput("dt_payout_sim_overall"),
+                            #          
+                            #          br(),
+                            #          
+                            #          br(),
+                            #          
+                            #          markdown("### **Payout Simulation (Individual Models)**"),
+                            #          
+                            #          br(),
+                            #          
+                            #          DTOutput("dt_payout_sim_model"),
+                            #          
+                            #          br()
+                            #          
+                            # ), # End of Payout Sim
                             
                             tabPanel("Payout Chart (Rounds)",
                                      
@@ -626,121 +626,119 @@ ui <- shinydashboardPlus::dashboardPage(
                                      shinycssloaders::withSpinner(plotlyOutput("plot_payout_individual")),
                                      
                                      br()
-                            ),
-                            
-                            
-                            tabPanel("KPI (x~y)",
-                                     
-                                     br(),
-                                     
-                                     markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)"),
-
-                                     br(),
-                                     
-                                     # Controls ============================================================================
-                                     
-                                     fluidRow(
-                                       
-                                       column(6, 
-                                              markdown("#### **X-Axis:**"),
-                                              pickerInput(
-                                                inputId = "kpi_xy_x",
-                                                choices = c("CORRv2: CORRelation with target cyrus_v4_20",
-                                                            "MMCv2: The Latest and the Greatest MMC",
-                                                            "TC: True Contribtuion to the hedge fund's returns",
-                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
-                                                            "Percentile: MMCv2",
-                                                            "Percentile: CORRv2",
-                                                            "Percentile: TC",
-                                                            "Percentile: FNCv3",
-                                                            "CWMM: Correlation With the Meta Model",
-                                                            "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
-                                                            "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR"),
-                                                
-                                                multiple = FALSE,
-                                                width = "95%")
-                                       ),
-                                       
-                                       column(6, 
-                                              markdown("#### **Y-Axis:**"),
-                                              pickerInput(
-                                                inputId = "kpi_xy_y",
-                                                choices = c("MMCv2: The Latest and the Greatest MMC",
-                                                            "CORRv2: CORRelation with target cyrus_v4_20",
-                                                            "TC: True Contribtuion to the hedge fund's returns",
-                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
-                                                            "Percentile: MMCv2",
-                                                            "Percentile: CORRv2",
-                                                            "Percentile: TC",
-                                                            "Percentile: FNCv3",
-                                                            "CWMM: Correlation With the Meta Model",
-                                                            "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
-                                                            "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR"),
-                                                
-                                                multiple = FALSE,
-                                                width = "95%")
-                                       ),
-                                       
-                                       column(2,
-                                              markdown("#### **Control 1**"),
-                                              switchInput(
-                                                inputId = "kpi_xy_ctrl_1",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = TRUE)
-                                       ),
-                                       
-                                       column(2,
-                                              markdown("#### **Control 2**"),
-                                              switchInput(
-                                                inputId = "kpi_xy_ctrl_2",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = FALSE)
-                                       ),
-                                       
-                                       column(2,
-                                              markdown("#### **Control 3**"),
-                                              switchInput(
-                                                inputId = "kpi_xy_ctrl_3",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = FALSE)
-                                       ),
-                                       
-                                       column(2,
-                                              markdown("#### **Control 4**"),
-                                              switchInput(
-                                                inputId = "kpi_xy_ctrl_4",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = FALSE)
-                                       ),
-                                       
-                                       column(2,
-                                              markdown("#### **Control 5**"),
-                                              switchInput(
-                                                inputId = "kpi_xy_ctrl_5",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = FALSE)
-                                       ),
-                                       
-                                       column(2,
-                                              markdown("#### **Control 6**"),
-                                              switchInput(
-                                                inputId = "kpi_xy_ctrl_6",
-                                                onLabel = "Yes",
-                                                offLabel = "No",
-                                                value = FALSE)
-                                       )
-                                       
-                                       
-                                     ),
-                                     
-                                     br()
-                                     
                             )
+                            
+                            
+                            # tabPanel("KPI (x~y)",
+                            #          
+                            #          br(),
+                            #          
+                            #          markdown("![image](https://media.giphy.com/media/cftSzNoCTfSyAWctcl/giphy.gif)"),
+                            # 
+                            #          br(),
+                            #          
+                            #          fluidRow(
+                            #            
+                            #            column(6, 
+                            #                   markdown("#### **X-Axis:**"),
+                            #                   pickerInput(
+                            #                     inputId = "kpi_xy_x",
+                            #                     choices = c("CORRv2: CORRelation with target cyrus_v4_20",
+                            #                                 "MMCv2: The Latest and the Greatest MMC",
+                            #                                 "TC: True Contribtuion to the hedge fund's returns",
+                            #                                 "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
+                            #                                 "Percentile: MMCv2",
+                            #                                 "Percentile: CORRv2",
+                            #                                 "Percentile: TC",
+                            #                                 "Percentile: FNCv3",
+                            #                                 "CWMM: Correlation With the Meta Model",
+                            #                                 "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
+                            #                                 "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR"),
+                            #                     
+                            #                     multiple = FALSE,
+                            #                     width = "95%")
+                            #            ),
+                            #            
+                            #            column(6, 
+                            #                   markdown("#### **Y-Axis:**"),
+                            #                   pickerInput(
+                            #                     inputId = "kpi_xy_y",
+                            #                     choices = c("MMCv2: The Latest and the Greatest MMC",
+                            #                                 "CORRv2: CORRelation with target cyrus_v4_20",
+                            #                                 "TC: True Contribtuion to the hedge fund's returns",
+                            #                                 "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
+                            #                                 "Percentile: MMCv2",
+                            #                                 "Percentile: CORRv2",
+                            #                                 "Percentile: TC",
+                            #                                 "Percentile: FNCv3",
+                            #                                 "CWMM: Correlation With the Meta Model",
+                            #                                 "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
+                            #                                 "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR"),
+                            #                     
+                            #                     multiple = FALSE,
+                            #                     width = "95%")
+                            #            ),
+                            #            
+                            #            column(2,
+                            #                   markdown("#### **Control 1**"),
+                            #                   switchInput(
+                            #                     inputId = "kpi_xy_ctrl_1",
+                            #                     onLabel = "Yes",
+                            #                     offLabel = "No",
+                            #                     value = TRUE)
+                            #            ),
+                            #            
+                            #            column(2,
+                            #                   markdown("#### **Control 2**"),
+                            #                   switchInput(
+                            #                     inputId = "kpi_xy_ctrl_2",
+                            #                     onLabel = "Yes",
+                            #                     offLabel = "No",
+                            #                     value = FALSE)
+                            #            ),
+                            #            
+                            #            column(2,
+                            #                   markdown("#### **Control 3**"),
+                            #                   switchInput(
+                            #                     inputId = "kpi_xy_ctrl_3",
+                            #                     onLabel = "Yes",
+                            #                     offLabel = "No",
+                            #                     value = FALSE)
+                            #            ),
+                            #            
+                            #            column(2,
+                            #                   markdown("#### **Control 4**"),
+                            #                   switchInput(
+                            #                     inputId = "kpi_xy_ctrl_4",
+                            #                     onLabel = "Yes",
+                            #                     offLabel = "No",
+                            #                     value = FALSE)
+                            #            ),
+                            #            
+                            #            column(2,
+                            #                   markdown("#### **Control 5**"),
+                            #                   switchInput(
+                            #                     inputId = "kpi_xy_ctrl_5",
+                            #                     onLabel = "Yes",
+                            #                     offLabel = "No",
+                            #                     value = FALSE)
+                            #            ),
+                            #            
+                            #            column(2,
+                            #                   markdown("#### **Control 6**"),
+                            #                   switchInput(
+                            #                     inputId = "kpi_xy_ctrl_6",
+                            #                     onLabel = "Yes",
+                            #                     offLabel = "No",
+                            #                     value = FALSE)
+                            #            )
+                            #            
+                            #            
+                            #          ),
+                            #          
+                            #          br()
+                            #          
+                            # ) # end of KPI (x~y)
                             
                 ) # end of tabsetPanel
                 
@@ -918,6 +916,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.4** — Added `MMC` to `Payout Sim`
                 - #### **0.2.5** — Added more features related to MMC
                 - #### **0.2.6** — Added survey results - Ref: https://forum.numer.ai/t/around-the-world-with-numeratis-survey-for-upcoming-events
+                - #### **0.2.7** — Removed `Payout Simulation`
                 "),
               
               br(),
@@ -936,7 +935,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.6"))
+    right = paste0("Version 0.2.7"))
   
 )
 
