@@ -443,49 +443,49 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
 
                             
-                            tabPanel("KPI (C&T)",
-                                     
-                                     br(),
-                                     
-                                     h3(strong(textOutput(outputId = "text_performance_models"))),
-                                     
-                                     h4(textOutput(outputId = "text_performance_models_note")),
-                                     
-                                     br(),
-                                     
-                                     fluidRow(
-                                       column(width = 6, plotlyOutput("plot_performance_avg")),
-                                       column(width = 6, plotlyOutput("plot_performance_sharpe"))
-                                     ),
-                                     
-                                     br(),
-                                     br(),
-                                     br(),
-                                     
-                                     fluidRow(DTOutput("dt_performance_summary"),
-                                              
-                                              br(),
-                                              
-                                              markdown("#### **Notes**:
-                                              
-                                              - **avg_corrV2**: Average `CORRv2`
-                                              - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
-                                              
-                                              - **avg_tc**: Average True Contribution (`TC`)
-                                              - **sharpe_tc**: Sharpe Ratio of True Contribution (`TC`)
-                                              
-                                              - **avg_2C1T**: Average `2xCORRv2 + 1xTC`
-                                              - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
-                                              
-                                              "),
-                                              
-                                              br()
-                                     ),
-                                     
-                                     
-                                     br()
-                                     
-                            ),
+                            # tabPanel("KPI (C&T)",
+                            #          
+                            #          br(),
+                            #          
+                            #          h3(strong(textOutput(outputId = "text_performance_models"))),
+                            #          
+                            #          h4(textOutput(outputId = "text_performance_models_note")),
+                            #          
+                            #          br(),
+                            #          
+                            #          fluidRow(
+                            #            column(width = 6, plotlyOutput("plot_performance_avg")),
+                            #            column(width = 6, plotlyOutput("plot_performance_sharpe"))
+                            #          ),
+                            #          
+                            #          br(),
+                            #          br(),
+                            #          br(),
+                            #          
+                            #          fluidRow(DTOutput("dt_performance_summary"),
+                            #                   
+                            #                   br(),
+                            #                   
+                            #                   markdown("#### **Notes**:
+                            #                   
+                            #                   - **avg_corrV2**: Average `CORRv2`
+                            #                   - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
+                            #                   
+                            #                   - **avg_tc**: Average True Contribution (`TC`)
+                            #                   - **sharpe_tc**: Sharpe Ratio of True Contribution (`TC`)
+                            #                   
+                            #                   - **avg_2C1T**: Average `2xCORRv2 + 1xTC`
+                            #                   - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
+                            #                   
+                            #                   "),
+                            #                   
+                            #                   br()
+                            #          ),
+                            #          
+                            #          
+                            #          br()
+                            #          
+                            # ), # End of KPI (C&T)
                             
                             
                             tabPanel("Payout (Overview)",
@@ -524,7 +524,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout (Rounds)",
+                            tabPanel("Payout Table (Rounds)",
                                      
                                      br(),
                                      
@@ -539,7 +539,7 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
                             
                             
-                            tabPanel("Payout (Models)",
+                            tabPanel("Payout Table (Models)",
                                      
                                      br(),
                                      
@@ -916,7 +916,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.4** — Added `MMC` to `Payout Sim`
                 - #### **0.2.5** — Added more features related to MMC
                 - #### **0.2.6** — Added survey results - Ref: https://forum.numer.ai/t/around-the-world-with-numeratis-survey-for-upcoming-events
-                - #### **0.2.7** — Removed `Payout Simulation`
+                - #### **0.2.7** — Removed `KPI (C&T)` and `Payout Simulation`
                 "),
               
               br(),
