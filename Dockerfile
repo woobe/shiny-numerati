@@ -4,9 +4,8 @@ FROM rocker/r-ver:4.2.3
 RUN R -q -e "install.packages(c('remotes'))"
 
 # Specific version of other Packages
-# RUN R -q -e "remotes::install_version('httpuv', version = '1.6.6', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_github('r-lib/later')"
-RUN R -q -e "install.pacakges('httpuv')"
+RUN R -q -e "remotes::install_version('httpuv', version = '1.6.6', repos = 'http://cran.us.r-project.org')"
 
 # Specific version of other Packages
 RUN R -q -e "remotes::install_version('farver', version = '2.1.1', repos = 'http://cran.us.r-project.org')"
