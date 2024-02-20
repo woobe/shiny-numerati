@@ -12,6 +12,10 @@ RUN R -q -e "remotes::install_version('memoise', version = '2.0.1', repos = 'htt
 RUN R -q -e "remotes::install_version('rematch2', version = '2.1.2', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('yaml', version = '2.3.8', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('gert', version = '2.0.1', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('processx', version = '3.8.3', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('fontawesome', version = '0.5.2', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('digest', version = '0.6.34', repos = 'http://cran.us.r-project.org')"
+
 
 
 RUN R -q -e "remotes::install_version('farver', version = '2.1.1', repos = 'http://cran.us.r-project.org')"
