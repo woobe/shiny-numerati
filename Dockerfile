@@ -20,8 +20,8 @@ RUN R -q -e "remotes::install_version('sass', version = '0.4.8', repos = 'http:/
 RUN R -q -e "remotes::install_version('farver', version = '2.1.1', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('sourcetools', version = '0.1.7-1', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('xtable', version = '1.8-4', repos = 'http://cran.us.r-project.org')"
-
-
+RUN R -q -e "remotes::install_version('stringr', version = '1.5.0', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('tinytex', version = '0.45', repos = 'http://cran.us.r-project.org')"
 
 RUN R -q -e "remotes::install_version('shiny', version = '1.8.0', repos = 'http://cran.us.r-project.org')"
 
