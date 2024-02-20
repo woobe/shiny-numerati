@@ -16,10 +16,10 @@ RUN R -q -e "remotes::install_version('processx', version = '3.8.3', repos = 'ht
 RUN R -q -e "remotes::install_version('fontawesome', version = '0.5.2', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('digest', version = '0.6.34', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('brew', version = '1.0.10', repos = 'http://cran.us.r-project.org')"
-RUN R -q -e "remotes::install_version('shiny', version = '1.8.0', repos = 'http://cran.us.r-project.org')"
-
+RUN R -q -e "remotes::install_version('sass', version = '0.4.8', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('farver', version = '2.1.1', repos = 'http://cran.us.r-project.org')"
 
+RUN R -q -e "remotes::install_version('shiny', version = '1.8.0', repos = 'http://cran.us.r-project.org')"
 
 # RUN R -q -e "install.packages(c('devtools'))"
 # RUN R -q -e "remotes::install_version('devtools', version = '2.4.5', repos = 'http://cran.us.r-project.org')"
