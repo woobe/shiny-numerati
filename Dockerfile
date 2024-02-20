@@ -2,7 +2,8 @@ FROM rocker/r-ver:4.2.3
 
 # Remotes
 RUN R -q -e "install.packages(c('remotes'))"
-RUN R -q -e "install.packages(c('devtools'))"
+# RUN R -q -e "install.packages(c('devtools'))"
+RUN R -q -e "remotes::install_version('devtools', version = '2.4.5', repos = 'http://cran.us.r-project.org')"
 
 # Specific version of other Packages
 # Specific version of other Packages
@@ -27,7 +28,9 @@ RUN R -q -e "install.packages(c('DT', 'plotly', 'scico', 'ggthemes', 'scales', '
 RUN R -q -e "install.packages(c('data.table', 'dtplyr', 'googlesheets4'))"
 
 # modified version of Rnumerai
-RUN R -q -e "devtools::install_github('woobe/Rnumerai')"
+# RUN R -q -e "devtools::install_github('woobe/Rnumerai')"
+RUN R -q -e "remotes::install_github('woobe/Rnumerai')"
+
 
 # copy the app to the image
 WORKDIR /shinyapp
