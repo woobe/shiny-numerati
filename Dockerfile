@@ -18,6 +18,8 @@ RUN R -q -e "remotes::install_version('digest', version = '0.6.34', repos = 'htt
 RUN R -q -e "remotes::install_version('brew', version = '1.0.10', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('sass', version = '0.4.8', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('farver', version = '2.1.1', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('sourcetools', version = '0.1.7-1', repos = 'http://cran.us.r-project.org')"
+
 
 RUN R -q -e "remotes::install_version('shiny', version = '1.8.0', repos = 'http://cran.us.r-project.org')"
 
