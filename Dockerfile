@@ -7,6 +7,8 @@ RUN R -q -e "install.packages(c('remotes'))"
 RUN R -q -e "remotes::install_version('xfun', version = '0.42', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('fansi', version = '1.0.6', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('xopen', version = '1.0.0', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('rlang', version = '1.1.3', repos = 'http://cran.us.r-project.org')"
+RUN R -q -e "remotes::install_version('memoise', version = '2.0.1', repos = 'http://cran.us.r-project.org')"
 
 RUN R -q -e "remotes::install_version('farver', version = '2.1.1', repos = 'http://cran.us.r-project.org')"
 
