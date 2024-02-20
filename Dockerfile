@@ -3,6 +3,7 @@ FROM rocker/r-ver:4.2.3
 # Remotes
 RUN R -q -e "install.packages(c('remotes'))"
 # RUN R -q -e "install.packages(c('devtools'))"
+RUN R -q -e "remotes::install_version('xfun', version = '0.35', repos = 'http://cran.us.r-project.org')"
 RUN R -q -e "remotes::install_version('devtools', version = '2.4.5', repos = 'http://cran.us.r-project.org')"
 
 # Specific version of other Packages
