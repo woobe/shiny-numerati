@@ -314,7 +314,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 fluidRow(
                   
-                  column(6,
+                  column(8,
                          
                          markdown("## **Step 4: Adjust the Filter**"),
                          
@@ -328,7 +328,7 @@ ui <- shinydashboardPlus::dashboardPage(
                          )
                   ),
                   
-                  column(6, 
+                  column(4, 
                          
                          markdown("## **Step 5: Generate Summary**"),
                          br(),
