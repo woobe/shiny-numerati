@@ -364,33 +364,28 @@ ui <- shinydashboardPlus::dashboardPage(
                                               markdown("#### **Pick ONE of the KPIs:**"),
                                               pickerInput(
                                                 inputId = "kpi_choice",
-                                                choices = c("MMCv2: The Latest and the Greatest MMC",
-                                                            "CORRv2: CORRelation with target cyrus_v4_20",
-                                                            "TC: True Contribtuion to the hedge fund's returns",
-                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
-                                                            # "CORJ60: CORRelation with target Jerome_v4_60", # add this later
+                                                choices = c("Score Multipliers: 0.5 x CORRv2 + 2.0 x MMCv2",
+                                                            "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC",
                                                             
+                                                            "MMCv2: The Latest and the Greatest MMC",
                                                             "Percentile: MMCv2",
+                                                            
+                                                            "CORRv2: CORRelation with target cyrus_v4_20",
                                                             "Percentile: CORRv2",
+                                                            
+                                                            "TC: True Contribtuion to the hedge fund's returns",
                                                             "Percentile: TC",
+                                                            
+                                                            "FNCv3: Feature Neutral Correlation with respect to the FNCv3 features",
                                                             "Percentile: FNCv3",
                                                             
                                                             "CWMM: Correlation With the Meta Model",
                                                             "MCWNM: Maximum Correlation With Numerai Models staked at least 10 NMR",
                                                             "APCWNM: Average Pairwise Correlation With Numerai Models staked at least 10 NMR",
-                                                            
-                                                            "Score Multipliers: 0.5 x CORRv2 + 2.0 x MMCv2",
-                                                            "Score Multipliers: 0.5 x CORRv2",
-                                                            "Score Multipliers: 1.5 x CORRv2",
-                                                            "Score Multipliers: 2.0 x CORRv2",
-                                                            "Score Multipliers: 2.0 x CORRv2 + 0.5 x TC",
-                                                            "Score Multipliers: 2.0 x CORRv2 + 1.0 x TC",
-                                                            
-                                                            
-                                                            
 
                                                             "Payout",
                                                             "Rate of Return (%): Payout / Stake x 100"),
+                                                
                                                 multiple = FALSE,
                                                 width = "95%")
                                        ),
