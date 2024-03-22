@@ -314,7 +314,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 
                 fluidRow(
                   
-                  column(8,
+                  column(9,
                          
                          markdown("## **Step 4: Adjust the Filter**"),
                          
@@ -323,12 +323,12 @@ ui <- shinydashboardPlus::dashboardPage(
                                      width = "100%",
                                      step = 1,
                                      min = 168, # first tournament round
-                                     max = Rnumerai::get_current_round(), # note: daily payouts from round 474
-                                     value = c(496, Rnumerai::get_current_round())
+                                     max = Rnumerai::get_current_round(), 
+                                     value = c(650, Rnumerai::get_current_round()) # note: Round 650 == first round of 0.5 x CORR + 2 x MMC payout
                          )
                   ),
                   
-                  column(4, 
+                  column(3, 
                          
                          markdown("## **Step 5: Generate Summary**"),
                          br(),
@@ -912,6 +912,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.5** — Added more features related to MMC
                 - #### **0.2.6** — Added survey results - Ref: https://forum.numer.ai/t/around-the-world-with-numeratis-survey-for-upcoming-events
                 - #### **0.2.7** — Removed `KPI (C&T)` and `Payout Simulation`
+                - #### **0.2.8** — Changed filter starting round to 650 (first round of new payout scheme)
                 "),
               
               br(),
@@ -930,7 +931,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.7"))
+    right = paste0("Version 0.2.8"))
   
 )
 
