@@ -1109,11 +1109,11 @@ server <- function(input, output) {
   })
   
   output$text_next <- renderText({
-    if (length(react_ls_model()) >= 1) "Step 3: Performance Summary (see ←)" else " "
+    if (length(react_ls_model()) >= 1) "Step 3: Performance Summary (see <--)" else " "
   })
   
   output$text_note <- renderText({
-    if (length(react_ls_model()) >= 1) "Note: you can also download [Raw Data] and check out our [Community Events] (see ←)" else " "
+    if (length(react_ls_model()) >= 1) "Note: you can also download [Raw Data] and check out our [Community Events] (see <--)" else " "
   })
   
 
