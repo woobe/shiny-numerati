@@ -27,7 +27,10 @@ options(encoding = "UTF-8")
 
 # Pre-download all usernames
 options(timeout = max(1000, getOption("timeout")))
-ls_username <- sort(get_leaderboard()$username)
+
+# ls_username <- sort(get_leaderboard()$username)
+ls_username <- run_query("query LB {v2Leaderboard(limit: 1000000) {username}}", auth = FALSE)
+ls_username <- sort(ls_username$v2Leaderboard$username)
 
 
 # Prepare survey results data
