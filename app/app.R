@@ -1454,11 +1454,11 @@ server <- function(input, output) {
   })
   
   output$text_performance_chart_note <- renderText({
-    if (nrow(react_d_filter()) >= 1) "NOTE: Remember to refresh the chart (Step 5 ↑) after making any changes." else " "
+    if (nrow(react_d_filter()) >= 1) "NOTE: Remember to refresh the chart (Step 5) after making any changes." else " "
   })
   
   output$text_performance_chart_title <- renderText({
-    if (nrow(react_d_filter()) >= 1) "KPI Chart (Remember to Click the 'Refresh' Button ↑↑↑)" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Chart (Remember to Click the 'Refresh' Button)" else " "
   })
   
   output$text_performance_chart_data <- renderText({
