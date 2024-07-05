@@ -441,49 +441,49 @@ ui <- shinydashboardPlus::dashboardPage(
                             ),
 
                             
-                            # tabPanel("KPI (C&T)",
-                            #          
-                            #          br(),
-                            #          
-                            #          h3(strong(textOutput(outputId = "text_performance_models"))),
-                            #          
-                            #          h4(textOutput(outputId = "text_performance_models_note")),
-                            #          
-                            #          br(),
-                            #          
-                            #          fluidRow(
-                            #            column(width = 6, plotlyOutput("plot_performance_avg")),
-                            #            column(width = 6, plotlyOutput("plot_performance_sharpe"))
-                            #          ),
-                            #          
-                            #          br(),
-                            #          br(),
-                            #          br(),
-                            #          
-                            #          fluidRow(DTOutput("dt_performance_summary"),
-                            #                   
-                            #                   br(),
-                            #                   
-                            #                   markdown("#### **Notes**:
-                            #                   
-                            #                   - **avg_corrV2**: Average `CORRv2`
-                            #                   - **sharpe_corrV2**: Sharpe Ratio of `CORRv2`
-                            #                   
-                            #                   - **avg_tc**: Average True Contribution (`TC`)
-                            #                   - **sharpe_tc**: Sharpe Ratio of True Contribution (`TC`)
-                            #                   
-                            #                   - **avg_2C1T**: Average `2xCORRv2 + 1xTC`
-                            #                   - **sharpe_2C1T**: Sharpe Ratio of `2xCORRv2 + 1xTC`
-                            #                   
-                            #                   "),
-                            #                   
-                            #                   br()
-                            #          ),
-                            #          
-                            #          
-                            #          br()
-                            #          
-                            # ), # End of KPI (C&T)
+                            tabPanel("KPI (C&M)",
+
+                                     br(),
+
+                                     h3(strong(textOutput(outputId = "text_performance_models"))),
+
+                                     h4(textOutput(outputId = "text_performance_models_note")),
+
+                                     br(),
+
+                                     fluidRow(
+                                       column(width = 6, plotlyOutput("plot_performance_avg")),
+                                       column(width = 6, plotlyOutput("plot_performance_sharpe"))
+                                     ),
+
+                                     br(),
+                                     br(),
+                                     br(),
+
+                                     fluidRow(DTOutput("dt_performance_summary"),
+
+                                              br(),
+
+                                              markdown("#### **Notes**:
+
+                                              - **avg_05cor**: Average `0.5 x CORRv2`
+                                              - **sharpe_05cor**: Sharpe Ratio of `0.5 x CORRv2`
+
+                                              - **avg_2mmc**: Average `2 x MMC`
+                                              - **sharpe_2mmc**: Sharpe Ratio of `2 x MMC`
+                                              
+                                              - **avg_05cor2mmc**: Average `0.5 x CORRv2 + 2 x MMC`
+                                              - **sharpe_05cor2mmc**: Sharpe Ratio of `0.5 x CORRv2 + 2 x MMC`
+
+                                              "),
+
+                                              br()
+                                     ),
+
+
+                                     br()
+
+                            ), # End of KPI (C&M)
                             
                             
                             tabPanel("Payout (Overview)",
@@ -916,6 +916,7 @@ ui <- shinydashboardPlus::dashboardPage(
                 - #### **0.2.6** — Added survey results - Ref: https://forum.numer.ai/t/around-the-world-with-numeratis-survey-for-upcoming-events
                 - #### **0.2.7** — Removed `KPI (C&T)` and `Payout Simulation`
                 - #### **0.2.8** — Changed filter starting round to 650 (first round of new payout scheme)
+                - #### **0.2.9** — Added `KPI (C&M)` for CorrV2 and MMC performance analysis
                 "),
               
               br(),
@@ -934,7 +935,7 @@ ui <- shinydashboardPlus::dashboardPage(
   
   footer = shinydashboardPlus::dashboardFooter(
     left = "Powered by ❤️, ☕, Shiny, and 🤗 Spaces",
-    right = paste0("Version 0.2.8"))
+    right = paste0("Version 0.2.9"))
   
 )
 
@@ -1318,7 +1319,11 @@ server <- function(input, output) {
       d_pref <- as.data.table(react_d_filter())
       
       # Add 2xCORRv2 + 1xTC
-      d_pref[, twoC_oneT := 2*corrV2 + tc]
+      # d_pref[, twoC_oneT := 2*corrV2 + tc]
+      
+      # Add 0.5xCORRv2 + 2xMMC
+      d_pref[, halfC_twoM := 0.5*corrV2 + 2*mmc]
+      
       
       # Calculate some high level stats
       d_pref <- 
@@ -1327,18 +1332,16 @@ server <- function(input, output) {
         group_by(model) |>
         summarise(total_rounds = n(),
                   
-                  avg_corrV2 = mean(corrV2, na.rm = T),
-                  sharpe_corrV2 = mean(corrV2, na.rm = T) / sd(corrV2, na.rm = T),
-                  # mdd_corrV2 = maxdrawdown(corrV2),
+                  avg_05cor = mean(corrV2/2, na.rm = T),
+                  sharpe_05cor = mean(corrV2/2, na.rm = T) / sd(corrV2/2, na.rm = T),
                   
-                  avg_tc = mean(tc, na.rm = T),
-                  sharpe_tc = mean(tc, na.rm = T) / sd(tc, na.rm = T),
-                  # mdd_tc = maxdrawdown(tc),
+                  avg_2mmc = mean(mmc*2, na.rm = T),
+                  sharpe_2mmc = mean(mmc*2, na.rm = T) / sd(mmc*2, na.rm = T),
                   
-                  avg_2C1T = mean(twoC_oneT, na.rm = T),
-                  sharpe_2C1T = mean(twoC_oneT, na.rm = T) / sd(tc, na.rm = T)
-                  # mdd_2C1T = maxdrawdown(twoC_oneT)
+                  avg_05cor2mmc = mean(halfC_twoM, na.rm = T),
+                  sharpe_05cor2mmc = mean(halfC_twoM, na.rm = T) / sd(halfC_twoM, na.rm = T)
                   
+
         ) |> as.data.table()
       
       # Return
@@ -1442,11 +1445,11 @@ server <- function(input, output) {
   })
   
   output$text_performance_models <- renderText({
-    if (nrow(react_d_filter()) >= 1) "KPI Analysis (CORRv2 and TC)" else " "
+    if (nrow(react_d_filter()) >= 1) "KPI Analysis (0.5xCORRv2 and 2xMMC)" else " "
   })
   
   output$text_performance_models_note <- renderText({
-    if (nrow(react_d_filter()) >= 1) "NOTE: You may want to find out which models have high CORRv2 Sharpe and high TC Sharpe." else " "
+    if (nrow(react_d_filter()) >= 1) "NOTE: You may want to find out which models have **both** high CORRv2 Sharpe and MMC Sharpe." else " "
   })
   
   output$text_performance_chart <- renderText({
@@ -1761,7 +1764,7 @@ server <- function(input, output) {
   })
   
   
-  # KPI Chart: Avg Corr vs. Avg TC
+  # KPI Chart: Avg Corr vs. Avg MMC
   output$plot_performance_avg <- renderPlotly({
     
     # Data
@@ -1769,10 +1772,10 @@ server <- function(input, output) {
     
     # Plot
     p_avg <- ggplot(d_pref, 
-                    aes(x = avg_tc, y = avg_corrV2,
+                    aes(x = avg_2mmc, y = avg_05cor,
                         text = paste("Model:", model, 
-                                     "\nAverage CORRv2:", round(avg_corrV2, 4),
-                                     "\nAverage TC:", round(avg_tc, 4))
+                                     "\nAverage 0.5xCORRv2:", round(avg_05cor, 4),
+                                     "\nAverage 2xMMC:", round(avg_2mmc, 4))
                     )) +
       geom_point() +
       theme(
@@ -1790,12 +1793,12 @@ server <- function(input, output) {
       ) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       scale_y_continuous(breaks = breaks_pretty(5)) +
-      xlab("\nAverage TC") +
-      ylab("\nAverage CORRv2")
+      xlab("\nAverage 2xMMC") +
+      ylab("\nAverage 0.5xCORRv2")
     
     # Add vline and hline if needed
-    if (min(d_pref$avg_corrV2) <0) p_avg <- p_avg + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
-    if (min(d_pref$avg_tc) <0) p_avg <- p_avg + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+    if (min(d_pref$avg_05cor) <0) p_avg <- p_avg + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+    if (min(d_pref$avg_2mmc) <0) p_avg <- p_avg + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
     
     # Convert to Plotly
     ggplotly(p_avg, tooltip = "text") |> toWebGL()
@@ -1803,7 +1806,7 @@ server <- function(input, output) {
   })
   
   
-  # KPI Chart: Corr Sharpe vs. TC Sharpe
+  # KPI Chart: Corr Sharpe vs. MMC Sharpe
   output$plot_performance_sharpe <- renderPlotly({
     
     # Data
@@ -1811,10 +1814,10 @@ server <- function(input, output) {
     
     # Plot
     p_sharpe <- ggplot(d_pref, 
-                       aes(x = sharpe_tc, y = sharpe_corrV2,
+                       aes(x = sharpe_2mmc, y = sharpe_05cor,
                            text = paste("Model:", model, 
-                                        "\nSharpe Ratio of CORRv2:", round(sharpe_corrV2, 4),
-                                        "\nSharpe Ratio of TC:", round(sharpe_tc, 4))
+                                        "\nSharpe Ratio of 0.5xCORRv2:", round(sharpe_05cor, 4),
+                                        "\nSharpe Ratio of 2xMMC:", round(sharpe_2mmc, 4))
                        )) +
       geom_point() +
       theme(
@@ -1832,12 +1835,12 @@ server <- function(input, output) {
       ) +
       scale_x_continuous(breaks = breaks_pretty(5)) +
       scale_y_continuous(breaks = breaks_pretty(5)) +
-      xlab("\nSharpe Ratio of TC") +
-      ylab("\nSharpe Ratio of CORRv2")
+      xlab("\nSharpe Ratio of 2xMMC") +
+      ylab("\nSharpe Ratio of 0.5xCORRv2")
     
     # Add vline and hline if needed
-    if (min(d_pref$sharpe_corrV2) <0) p_sharpe <- p_sharpe + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
-    if (min(d_pref$sharpe_tc) <0) p_sharpe <- p_sharpe + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+    if (min(d_pref$sharpe_05cor) <0) p_sharpe <- p_sharpe + geom_hline(aes(yintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
+    if (min(d_pref$sharpe_2mmc) <0) p_sharpe <- p_sharpe + geom_vline(aes(xintercept = 0), linewidth = 0.25, color = "grey", linetype = "dashed")
     
     # Convert to Plotly
     ggplotly(p_sharpe, tooltip = "text")  |> toWebGL()
@@ -2139,15 +2142,16 @@ server <- function(input, output) {
     ) |>
       
       # Reformat individual columns
-      formatRound(columns = c("avg_corrV2", "sharpe_corrV2",
-                              "avg_tc", "sharpe_tc",
-                              "avg_2C1T", "sharpe_2C1T"
+      formatRound(columns = c("avg_05cor", "sharpe_05cor",
+                              "avg_2mmc", "sharpe_2mmc",
+                              "avg_05cor2mmc", "sharpe_05cor2mmc"
+                              
       ),
       digits = 4) |>
       
-      formatStyle(columns = c("avg_corrV2", "sharpe_corrV2",
-                              "avg_tc", "sharpe_tc",
-                              "avg_2C1T", "sharpe_2C1T"
+      formatStyle(columns = c("avg_05cor", "sharpe_05cor",
+                              "avg_2mmc", "sharpe_2mmc",
+                              "avg_05cor2mmc", "sharpe_05cor2mmc"
       ),
       color = styleInterval(cuts = c(-1e-15, 1e-15),
                             values = c("#D24141", "#D1D1D1", "#00A800")))
