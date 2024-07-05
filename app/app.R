@@ -1449,7 +1449,7 @@ server <- function(input, output) {
   })
   
   output$text_performance_models_note <- renderText({
-    if (nrow(react_d_filter()) >= 1) "NOTE: You may want to find out which models have **both** high CORRv2 Sharpe and MMC Sharpe." else " "
+    if (nrow(react_d_filter()) >= 1) "NOTE: You may want to find out which models have high CORRv2 Sharpe and high MMC Sharpe." else " "
   })
   
   output$text_performance_chart <- renderText({
